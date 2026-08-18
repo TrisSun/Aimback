@@ -136,8 +136,12 @@ class PostWriteSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs: dict) -> dict:
-        category_l1 = attrs.get("category_l1")
-        category_l2 = attrs.get("category_l2")
+        category_l1 = attrs.get(
+            "category_l1", getattr(self.instance, "category_l1", None)
+        )
+        category_l2 = attrs.get(
+            "category_l2", getattr(self.instance, "category_l2", None)
+        )
         if category_l1 and category_l2 and not constants.is_valid_category(
             category_l1, category_l2
         ):
@@ -145,8 +149,12 @@ class PostWriteSerializer(serializers.ModelSerializer):
                 {"category_l2": "二级分类与一级分类不匹配"}
             )
 
-        event_start = attrs.get("event_start_at")
-        event_end = attrs.get("event_end_at")
+        event_start = attrs.get(
+            "event_start_at", getattr(self.instance, "event_start_at", None)
+        )
+        event_end = attrs.get(
+            "event_end_at", getattr(self.instance, "event_end_at", None)
+        )
         if event_start and event_end and event_start > event_end:
             raise serializers.ValidationError(
                 {"event_end_at": "结束时间不能早于开始时间"}
