@@ -139,6 +139,9 @@ class PostApiTestCase(TestCase):
         list_resp = self.client.get("/api/v1/posts")
         self.assertEqual(list_resp.status_code, 200)
         self.assertEqual(list_resp.data["count"], 0)
+        self.assertIn("page", list_resp.data)
+        self.assertIn("page_size", list_resp.data)
+        self.assertIn("results", list_resp.data)
 
         publish_resp = self.client.post(f"/api/v1/posts/{post_id}/publish")
         self.assertEqual(publish_resp.status_code, 200, publish_resp.content)
@@ -146,6 +149,9 @@ class PostApiTestCase(TestCase):
 
         list_resp = self.client.get("/api/v1/posts")
         self.assertEqual(list_resp.data["count"], 1)
+        self.assertIn("page", list_resp.data)
+        self.assertIn("page_size", list_resp.data)
+        self.assertIn("results", list_resp.data)
 
     def test_draft_detail_requires_author(self):
         post = Post.objects.create(
