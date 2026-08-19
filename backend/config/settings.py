@@ -1,7 +1,10 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me")
 DEBUG = os.environ.get("DEBUG", "True").lower() in {"1", "true", "yes"}
@@ -19,10 +22,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "apps.posts.apps.PostsConfig",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.storage.apps.StorageConfig",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -85,11 +92,17 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.accounts.auth_tokens.QueryTokenAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
 }
 
-# 说明：首日先用 Django 内置 auth.User 验证 posts 迁移。
-# B 建 apps/accounts.User 后，再把 AUTH_USER_MODEL 指向 "accounts.User"，
+# 自定义用户模型（B 建 apps/accounts.User 后启用）。
 # posts 模型引用 settings.AUTH_USER_MODEL，迁移会自动跟随切换。
+AUTH_USER_MODEL = "accounts.User"
+
+# CORS：开发期放开所有来源，前端联调用；上线收紧到具体域名。
+CORS_ALLOW_ALL_ORIGINS = True
