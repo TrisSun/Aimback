@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 
 from . import sms
 from .auth_tokens import issue_token
+from .throttles import LoginIPThrottle, SendCodeIPThrottle
 
 log = logging.getLogger(__name__)
 User = get_user_model()
@@ -38,7 +39,14 @@ def _today_str():
 
 
 class SendCodeView(APIView):
+    """
+    发验证码。两层限流并存：
+      1) DRF IP throttle（30/min，本文件外）→ 防同一 IP 攻击多个手机号
+      2) 手写 per-phone 限流（60s/次、每天 10 次）→ 防同一手机号被打爆
+    两者职责独立：DRF 的是安全节流，手写的是业务节流。
+    """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [SendCodeIPThrottle]
 
     def post(self, request):
         phone = (request.data.get("phone") or "").strip()
@@ -79,7 +87,9 @@ class SendCodeView(APIView):
 
 
 class LoginCodeView(APIView):
+    """验证码登录。无用户层 throttle（这一步还没登录），按 IP 节流 10/min。"""
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginIPThrottle]
 
     def post(self, request):
         phone = (request.data.get("phone") or "").strip()

@@ -14,6 +14,8 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.accounts.throttles import PresignUserThrottle
+
 from .cos_presign import presign_original_upload, public_url_for
 
 MAX_IMAGES_PER_POST = 4  # 接口契约 3.5：images 最多 4 张
@@ -25,7 +27,8 @@ class PresignUploadView(APIView):
     契约 3.5：images 最多 4 张（这里 1~MAX_IMAGES_PER_POST）。
     原图进私有桶；返回的 key 是 cos_key，前端 PUT 完后回传给 A 的帖子接口。
     """
-    permission_classes = [permissions.AllowAny]  # 开发期允许匿名；上线时改 IsAuthenticated
+    permission_classes = [permissions.IsAuthenticated]  # 已登录用户才能拿上传凭证
+    throttle_classes = [PresignUserThrottle]  # 同一用户每分钟最多 30 次
 
     def post(self, request):
         try:

@@ -98,6 +98,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
+    # 限流：速率表，仅供各视图显式声明 throttle_classes 时查询。
+    # 故意不设 DEFAULT_THROTTLE_CLASSES，避免全局默认拦截读接口。
+    "DEFAULT_THROTTLE_RATES": {
+        "send_code_ip": "30/min",   # send-code：同一 IP 每分钟最多 30 次，防刷多手机号
+        "login_ip":     "10/min",   # login-code：同一 IP 每分钟最多 10 次，防验证码爆破
+        "presign_user": "30/min",   # presign：同一登录用户每分钟最多 30 张上传凭证
+    },
 }
 
 # 自定义用户模型（B 建 apps/accounts.User 后启用）。
