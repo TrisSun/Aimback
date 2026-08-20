@@ -1,0 +1,115 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me")
+DEBUG = os.environ.get("DEBUG", "True").lower() in {"1", "true", "yes"}
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("ALLOWED_HOSTS", "*").split(",")
+    if host.strip()
+]
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "corsheaders",
+    "apps.posts.apps.PostsConfig",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.storage.apps.StorageConfig",
+]
+
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+# 本地开发默认 SQLite；PostgreSQL 连接与 pgvector 由 B 在 infra 中落地。
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+LANGUAGE_CODE = "zh-hans"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "static/"
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.accounts.auth_tokens.QueryTokenAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+    ],
+    # 限流：速率表，仅供各视图显式声明 throttle_classes 时查询。
+    # 故意不设 DEFAULT_THROTTLE_CLASSES，避免全局默认拦截读接口。
+    "DEFAULT_THROTTLE_RATES": {
+        "send_code_ip": "30/min",   # send-code：同一 IP 每分钟最多 30 次，防刷多手机号
+        "login_ip":     "10/min",   # login-code：同一 IP 每分钟最多 10 次，防验证码爆破
+        "presign_user": "30/min",   # presign：同一登录用户每分钟最多 30 张上传凭证
+    },
+}
+
+# 自定义用户模型（B 建 apps/accounts.User 后启用）。
+# posts 模型引用 settings.AUTH_USER_MODEL，迁移会自动跟随切换。
+AUTH_USER_MODEL = "accounts.User"
+
+# CORS：开发期放开所有来源，前端联调用；上线收紧到具体域名。
+CORS_ALLOW_ALL_ORIGINS = True
