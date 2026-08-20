@@ -111,5 +111,28 @@ REST_FRAMEWORK = {
 # posts 模型引用 settings.AUTH_USER_MODEL，迁移会自动跟随切换。
 AUTH_USER_MODEL = "accounts.User"
 
+# 缓存后端：env 驱动，REDIS_URL 填了走 Redis（生产/联调），空则 locmem（本地开发兜底）。
+# 用途：DRF throttle 计数 / token 缓存 / 短信验证码 / 短信发送频率。
+# ⚠️ locmem 是进程内缓存，跨进程不共享（多 worker 部署时 throttle 会失效）。
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+            "KEY_PREFIX": "aimback",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "aimback-dev",
+        }
+    }
+
 # CORS：开发期放开所有来源，前端联调用；上线收紧到具体域名。
 CORS_ALLOW_ALL_ORIGINS = True

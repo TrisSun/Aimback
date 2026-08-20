@@ -9,8 +9,10 @@ B 负责账号鉴权/上传/限流这一块，三个高敏感接口都需要节�
 注意：
     1. 这一层是「安全节流」（per-IP / per-user），与 send-code 里手写的
        per-phone 业务节流（SEND_INTERVAL/DAILY_LIMIT）是独立维度，两层并存。
-    2. 计数后端用 Django cache（开发期 locmem），部署阶段应切 Redis，
-       否则多进程 / 多机会各自计数，限流失效。
+    2. 计数后端用 Django cache（settings.CACHES），由 REDIS_URL 环境变量驱动：
+       - 留空 → locmem（本地开发，进程内缓存，跨进程不共享）
+       - 填值 → Redis（生产/多 worker 部署必填，否则限流失效）
+       详见 config/settings.py 的 CACHES 配置。
 """
 from rest_framework.throttling import SimpleRateThrottle
 
