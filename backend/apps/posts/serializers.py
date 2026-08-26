@@ -105,6 +105,26 @@ class PostWriteSerializer(serializers.ModelSerializer):
         queryset=Region.objects.all(),
         write_only=True,
     )
+    found_location_lat = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        min_value=-90,
+        max_value=90,
+        allow_null=True,
+        required=False,
+    )
+    found_location_lng = serializers.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        min_value=-180,
+        max_value=180,
+        allow_null=True,
+        required=False,
+    )
+    custody_type = serializers.ChoiceField(
+        choices=constants.CUSTODY_TYPE_CHOICES,
+        required=True,
+    )
     found_place_id = serializers.PrimaryKeyRelatedField(
         source="found_place",
         queryset=Place.objects.all(),

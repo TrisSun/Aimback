@@ -233,6 +233,28 @@ class PostApiTestCase(TestCase):
         self.assertEqual(resp.status_code, 400, resp.content)
         self.assertIn("event_end_at", resp.data)
 
+    def test_create_requires_custody_type(self):
+        self.client.force_authenticate(self.user)
+        payload = dict(self.payload)
+        payload.pop("custody_type")
+        resp = self.client.post("/api/v1/posts", payload, format="json")
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("custody_type", resp.data)
+
+    def test_create_rejects_lat_out_of_range(self):
+        self.client.force_authenticate(self.user)
+        payload = dict(self.payload, found_location_lat="91.000000")
+        resp = self.client.post("/api/v1/posts", payload, format="json")
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("found_location_lat", resp.data)
+
+    def test_create_rejects_lng_out_of_range(self):
+        self.client.force_authenticate(self.user)
+        payload = dict(self.payload, found_location_lng="181.000000")
+        resp = self.client.post("/api/v1/posts", payload, format="json")
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("found_location_lng", resp.data)
+
     def test_publish_non_draft_returns_conflict(self):
         post = self._create_post(status="published")
         self.client.force_authenticate(self.user)
