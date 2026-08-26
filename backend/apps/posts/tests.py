@@ -5,9 +5,9 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from .filters import apply_post_hard_filters
-from .models import Place, Post, Region
-from .serializers import PostPublicSerializer
+from .filters import apply_post_hard_filters, apply_post_search_query
+from .models import Place, Post, PostAttribute, Region
+from .serializers import PostAttributeSerializer, PostPublicSerializer
 
 User = get_user_model()
 
@@ -97,6 +97,43 @@ class PostModelTestCase(TestCase):
         self.assertNotIn("custody_address", data)
         self.assertNotIn("author", data)
 
+    def test_search_query_matches_title_description_and_attribute(self):
+        post = self._create_post(title="iPhone 14", description="黑色手机")
+        PostAttribute.objects.create(
+            post=post,
+            brand="Apple",
+            primary_color="black",
+            text_mark="A",
+            distinctive_features="无",
+            normalized_description="黑色手机",
+        )
+
+        self.assertEqual(
+            apply_post_search_query(Post.objects.all(), "iPhone").count(), 1
+        )
+        self.assertEqual(
+            apply_post_search_query(Post.objects.all(), "黑色").count(), 1
+        )
+        self.assertEqual(
+            apply_post_search_query(Post.objects.all(), "Apple").count(), 1
+        )
+        self.assertEqual(
+            apply_post_search_query(Post.objects.all(), "不存在").count(), 0
+        )
+
+    def test_primary_color_enum_validation(self):
+        serializer = PostAttributeSerializer(
+            data={
+                "brand": "Apple",
+                "primary_color": "redish",
+                "text_mark": "",
+                "distinctive_features": "",
+                "normalized_description": "",
+            }
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("primary_color", serializer.errors)
+
 
 class PostApiTestCase(TestCase):
     def setUp(self):
@@ -128,6 +165,24 @@ class PostApiTestCase(TestCase):
             "images": [{"cos_key": "posts/uuid.jpg", "sort_order": 0}],
         }
 
+    def _create_post(self, author=None, **overrides):
+        data = {
+            "author": author or self.user,
+            "type": "found",
+            "status": "published",
+            "category_l1": "electronics",
+            "category_l2": "phone",
+            "title": None,
+            "description": "图书馆三楼捡到手机",
+            "found_region": self.region,
+            "found_place": self.place,
+            "event_start_at": self.now - timedelta(hours=1),
+            "event_end_at": self.now,
+            "published_at": self.now,
+        }
+        data.update(overrides)
+        return Post.objects.create(**data)
+
     def test_create_publish_and_list_flow(self):
         self.client.force_authenticate(self.user)
         create_resp = self.client.post("/api/v1/posts", self.payload, format="json")
@@ -154,17 +209,7 @@ class PostApiTestCase(TestCase):
         self.assertIn("results", list_resp.data)
 
     def test_draft_detail_requires_author(self):
-        post = Post.objects.create(
-            author=self.user,
-            type="found",
-            status="draft",
-            category_l1="electronics",
-            category_l2="phone",
-            description="草稿",
-            found_region=self.region,
-            event_start_at=self.now,
-            event_end_at=self.now,
-        )
+        post = self._create_post(status="draft")
         self.client.force_authenticate(self.other)
         resp = self.client.get(f"/api/v1/posts/{post.id}")
         self.assertEqual(resp.status_code, 403)
@@ -172,3 +217,94 @@ class PostApiTestCase(TestCase):
         self.client.force_authenticate(self.user)
         resp = self.client.get(f"/api/v1/posts/{post.id}")
         self.assertEqual(resp.status_code, 200)
+
+    def test_create_requires_custody_place_for_official(self):
+        self.client.force_authenticate(self.user)
+        payload = dict(self.payload, custody_type="official", custody_place_id=None)
+        resp = self.client.post("/api/v1/posts", payload, format="json")
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("custody_place_id", resp.data)
+
+    def test_create_rejects_future_event_end(self):
+        self.client.force_authenticate(self.user)
+        payload = dict(self.payload)
+        payload["event_end_at"] = (self.now + timedelta(days=1)).isoformat()
+        resp = self.client.post("/api/v1/posts", payload, format="json")
+        self.assertEqual(resp.status_code, 400, resp.content)
+        self.assertIn("event_end_at", resp.data)
+
+    def test_publish_non_draft_returns_conflict(self):
+        post = self._create_post(status="published")
+        self.client.force_authenticate(self.user)
+        resp = self.client.post(f"/api/v1/posts/{post.id}/publish")
+        self.assertEqual(resp.status_code, 409)
+
+    def test_close_state_transitions(self):
+        self.client.force_authenticate(self.user)
+
+        completed = self._create_post(status="completed")
+        resp = self.client.post(f"/api/v1/posts/{completed.id}/close")
+        self.assertEqual(resp.status_code, 409)
+
+        closed = self._create_post(status="closed")
+        resp = self.client.post(f"/api/v1/posts/{closed.id}/close")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["status"], "closed")
+
+        published = self._create_post(status="published")
+        resp = self.client.post(f"/api/v1/posts/{published.id}/close")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["status"], "closed")
+
+    def test_patch_terminal_state_returns_conflict(self):
+        post = self._create_post(status="closed")
+        self.client.force_authenticate(self.user)
+        resp = self.client.patch(
+            f"/api/v1/posts/{post.id}", {"title": "新标题"}, format="json"
+        )
+        self.assertEqual(resp.status_code, 409)
+
+    def test_delete_only_allows_draft_or_closed(self):
+        self.client.force_authenticate(self.user)
+
+        draft = self._create_post(status="draft")
+        resp = self.client.delete(f"/api/v1/posts/{draft.id}")
+        self.assertEqual(resp.status_code, 204)
+
+        closed = self._create_post(status="closed")
+        resp = self.client.delete(f"/api/v1/posts/{closed.id}")
+        self.assertEqual(resp.status_code, 204)
+
+        published = self._create_post(status="published")
+        resp = self.client.delete(f"/api/v1/posts/{published.id}")
+        self.assertEqual(resp.status_code, 409)
+
+        others_draft = self._create_post(author=self.other, status="draft")
+        resp = self.client.delete(f"/api/v1/posts/{others_draft.id}")
+        self.assertEqual(resp.status_code, 403)
+
+    def test_list_q_and_default_sort(self):
+        post = self._create_post(
+            title="iPhone", description="黑色", published_at=self.now
+        )
+        PostAttribute.objects.create(
+            post=post,
+            brand="Apple",
+            primary_color="black",
+            text_mark="",
+            distinctive_features="",
+            normalized_description="",
+        )
+        older = self._create_post(
+            title="钱包", published_at=self.now - timedelta(hours=1)
+        )
+
+        self.client.force_authenticate(self.user)
+        resp = self.client.get("/api/v1/posts", {"q": "Apple"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["count"], 1)
+        self.assertEqual(resp.data["results"][0]["id"], post.id)
+
+        resp = self.client.get("/api/v1/posts")
+        ids = [item["id"] for item in resp.data["results"]]
+        self.assertEqual(ids, [post.id, older.id])

@@ -27,6 +27,26 @@ REVIEW_STATUS_CHOICES = [
     ("rejected", "拒绝"),
 ]
 
+PRIMARY_COLOR_CHOICES = [
+    ("black", "黑"),
+    ("white", "白"),
+    ("gray", "灰"),
+    ("red", "红"),
+    ("blue", "蓝"),
+    ("green", "绿"),
+    ("yellow", "黄"),
+    ("orange", "橙"),
+    ("pink", "粉"),
+    ("purple", "紫"),
+    ("brown", "棕"),
+    ("gold", "金"),
+    ("silver", "银"),
+    ("navy", "藏青"),
+    ("other", "其他"),
+]
+
+PRIMARY_COLOR_VALUES = {code for code, _ in PRIMARY_COLOR_CHOICES}
+
 REGION_LEVEL_CHOICES = [
     ("province", "省"),
     ("city", "市"),
