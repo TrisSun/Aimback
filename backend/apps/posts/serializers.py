@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils import timezone
 
 from . import constants
 from .models import Place, Post, PostAttribute, PostImage, Region
@@ -39,6 +40,11 @@ class PostAttributeSerializer(serializers.ModelSerializer):
             "distinctive_features",
             "normalized_description",
         ]
+
+    def validate_primary_color(self, value: str) -> str:
+        if value and value not in constants.PRIMARY_COLOR_VALUES:
+            raise serializers.ValidationError("主色不在允许的颜色枚举内")
+        return value
 
 
 class PostPublicSerializer(serializers.ModelSerializer):
@@ -158,6 +164,22 @@ class PostWriteSerializer(serializers.ModelSerializer):
         if event_start and event_end and event_start > event_end:
             raise serializers.ValidationError(
                 {"event_end_at": "结束时间不能早于开始时间"}
+            )
+
+        if event_end and event_end > timezone.now():
+            raise serializers.ValidationError(
+                {"event_end_at": "结束时间不能晚于当前时间"}
+            )
+
+        custody_type = attrs.get(
+            "custody_type", getattr(self.instance, "custody_type", None)
+        )
+        custody_place = attrs.get(
+            "custody_place", getattr(self.instance, "custody_place", None)
+        )
+        if custody_type == "official" and custody_place is None:
+            raise serializers.ValidationError(
+                {"custody_place_id": "官方保管必须指定保管场所"}
             )
 
         images = attrs.get("images", [])
