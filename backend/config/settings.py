@@ -88,6 +88,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# 静态文件收集目录：生产服务器在 .env 里覆盖为绝对路径（如 /var/www/aimback/static）
+STATIC_ROOT = os.environ.get("STATIC_ROOT") or str(BASE_DIR / "staticfiles")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
