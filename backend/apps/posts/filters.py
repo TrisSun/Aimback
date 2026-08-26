@@ -14,7 +14,6 @@ def apply_post_hard_filters(
     *,
     type: str | None = None,
     category_l1: str | None = None,
-    category_l2: str | None = None,
     region_code: str | None = None,
     place_id: int | None = None,
     event_start: str | None = None,
@@ -24,7 +23,8 @@ def apply_post_hard_filters(
 
     硬过滤顺序与 docs/接口契约.md 第 3.3 节保持一致：
     类型 -> 状态 -> 一级分类 -> 时间窗 -> 地理。
-    颜色、品牌、二级分类、场所是否相同只用于排序加分，不在这里剔除。
+    颜色、品牌、二级分类、场所是否相同只用于排序加分，不在这里剔除；
+    因此 category_l2 不作为硬过滤参数，预留给 E 的相关度排序。
     """
     qs = queryset.filter(status__in=POST_STATUS_SEARCHABLE)
 
@@ -34,9 +34,6 @@ def apply_post_hard_filters(
     # category_l1 为 any/空时不卡；为 other 时任一方的兜底分类不卡死。
     if category_l1 and category_l1 != "any" and category_l1 != "other":
         qs = qs.filter(category_l1=category_l1)
-
-    if category_l2:
-        qs = qs.filter(category_l2=category_l2)
 
     if region_code:
         qs = qs.filter(found_region__code=region_code)

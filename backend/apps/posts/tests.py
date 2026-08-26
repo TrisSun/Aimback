@@ -330,3 +330,16 @@ class PostApiTestCase(TestCase):
         resp = self.client.get("/api/v1/posts")
         ids = [item["id"] for item in resp.data["results"]]
         self.assertEqual(ids, [post.id, older.id])
+
+    def test_list_does_not_hard_filter_by_category_l2(self):
+        self._create_post(
+            category_l2="phone", published_at=self.now
+        )
+        self._create_post(
+            category_l2="laptop", published_at=self.now
+        )
+
+        self.client.force_authenticate(self.user)
+        resp = self.client.get("/api/v1/posts", {"category_l2": "phone"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.data["count"], 2)

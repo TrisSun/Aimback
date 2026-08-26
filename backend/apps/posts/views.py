@@ -74,7 +74,6 @@ class PostListCreateView(generics.ListCreateAPIView):
             qs,
             type=self.request.query_params.get("type"),
             category_l1=self.request.query_params.get("category_l1"),
-            category_l2=self.request.query_params.get("category_l2"),
             region_code=self.request.query_params.get("region_code"),
             place_id=_parse_int(self.request.query_params.get("place_id")),
             event_start=_parse_datetime(self.request.query_params.get("event_start")),
