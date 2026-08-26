@@ -4,22 +4,25 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
-// 引入你的页面
+// 引入页面
 import Home from './components/Home.vue'
 import Detail from './components/Detail.vue'
+import SearchResult from './components/SearchResult.vue'
+import Login from './components/Login.vue'
 
-// 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'Home', component: Home },
-    { path: '/detail/:id', name: 'Detail', component: Detail } // 详情页路径，:id 是动态参数
+    { path: '/detail/:id', name: 'Detail', component: Detail },
+    { path: '/search', name: 'SearchResult', component: SearchResult },
+    { path: '/login', name: 'Login', component: Login }
   ]
 })
 
 const app = createApp(App)
 
 app.use(ElementPlus)
-app.use(router) // 使用路由
+app.use(router)
 
 app.mount('#app')

@@ -22,7 +22,7 @@
               <el-icon :size="56"><Picture /></el-icon>
               <span>暂无图片</span>
             </div>
-            <span class="main-image__tag">{{ item.category }}</span>
+            <span class="main-image__tag">{{ item.category_l1_label }}</span>
           </div>
 
           <!-- 缩略图列表（仅一张图时自动隐藏） -->
@@ -47,24 +47,24 @@
             <div class="meta-row">
               <el-icon class="meta-row__icon"><Location /></el-icon>
               <span class="meta-row__label">丢失地点</span>
-              <span class="meta-row__value">{{ item.location }}</span>
+              <span class="meta-row__value">{{ item.found_place?.name }}</span>
             </div>
             <div class="meta-row">
               <el-icon class="meta-row__icon"><Clock /></el-icon>
               <span class="meta-row__label">丢失时间</span>
-              <span class="meta-row__value">{{ item.lostTime }}</span>
+              <span class="meta-row__value">{{ item.event_start_at }}</span>
             </div>
             <div class="meta-row">
               <el-icon class="meta-row__icon"><Box /></el-icon>
               <span class="meta-row__label">物品类别</span>
-              <span class="meta-row__value">{{ item.category }}</span>
+              <span class="meta-row__value">{{ item.category_l1_label }} / {{ item.category_l2_label }}</span>
             </div>
           </div>
 
           <div class="info__owner">
-            <el-avatar :size="36" class="owner-avatar">{{ item.ownerName.slice(0, 1) }}</el-avatar>
+            <el-avatar :size="36" class="owner-avatar">{{ item.ownerName?.slice(0, 1) }}</el-avatar>
             <span class="owner-name">{{ item.ownerName }}</span>
-            <span class="owner-time">发布于 {{ item.publishTime }}</span>
+            <span class="owner-time">发布于 {{ item.published_at }}</span>
           </div>
 
           <div class="info__actions">
@@ -102,15 +102,15 @@
           <p class="contact-dialog__tip">请通过以下方式与失主取得联系，说明物品特征以便确认。</p>
           <div class="contact-dialog__row">
             <span class="label">微信</span>
-            <span class="value">{{ item.contact.wechat }}</span>
-            <el-button size="small" type="primary" plain @click="copyText(item.contact.wechat)">
+            <span class="value">{{ item.contact?.wechat }}</span>
+            <el-button size="small" type="primary" plain @click="copyText(item.contact?.wechat)">
               复制
             </el-button>
           </div>
           <div class="contact-dialog__row">
             <span class="label">手机</span>
-            <span class="value">{{ item.contact.phone }}</span>
-            <el-button size="small" type="primary" plain @click="copyText(item.contact.phone)">
+            <span class="value">{{ item.contact?.phone }}</span>
+            <el-button size="small" type="primary" plain @click="copyText(item.contact?.phone)">
               复制
             </el-button>
           </div>
@@ -133,21 +133,24 @@
     Warning
   } from '@element-plus/icons-vue'
 
-  /** 物品详情数据结构 */
+  /** 物品详情数据结构（根据后端接口契约更新） */
+  /** 物品详情数据结构（根据后端接口契约更新） */
   interface ItemDetail {
     id: number
-    title: string
-    category: string
-    location: string
-    lostTime: string
-    publishTime: string
+    title: string | null
+    category_l1: string
+    category_l1_label: string
+    category_l2: string
+    category_l2_label: string
+    found_region: { code: string, name: string } | null
+    found_place: { id: number, name: string, place_type: string } | null
+    event_start_at: string | null
+    event_end_at: string | null
+    published_at: string | null
     description: string
-    images: string[]
-    ownerName: string
-    contact: {
-      wechat: string
-      phone: string
-    }
+    images: { id: number, sort_order: number, url: string, review_status: string }[]
+    ownerName?: string
+    contact?: { wechat: string, phone: string } | null
   }
 
   const route = useRoute()
@@ -155,10 +158,15 @@
   const item = reactive<ItemDetail>({
     id: 0,
     title: '',
-    category: '',
-    location: '',
-    lostTime: '',
-    publishTime: '',
+    category_l1: '',
+    category_l1_label: '',
+    category_l2: '',
+    category_l2_label: '',
+    found_region: null,
+    found_place: null,
+    event_start_at: null,
+    event_end_at: null,
+    published_at: null,
     description: '',
     images: [],
     ownerName: '',
@@ -178,24 +186,26 @@
     Object.assign(item, {
       id: Number(route.params.id) || 1,
       title: '黑色双肩背包（内含笔记本电脑）',
-      category: '箱包',
-      location: '图书馆三楼自习区',
-      lostTime: '2026-08-20 14:30',
-      publishTime: '2026-08-21',
+      category_l1: 'bags',
+      category_l1_label: '包袋',
+      category_l2: 'backpack',
+      category_l2_label: '双肩包',
+      found_region: { code: '440305', name: '南山区' },
+      found_place: { id: 12, name: '图书馆', place_type: 'school' },
+      event_start_at: '2026-08-20T14:30:00Z',
+      event_end_at: '2026-08-20T15:00:00Z',
+      published_at: '2026-08-21',
+      description: '8月20日下午在图书馆三楼自习区丢失一个黑色双肩背包，内有一台银色笔记本电脑（带蓝色贴纸）、若干书本和一副耳机。\n包外侧有一处轻微磨损，拉链头是金属圆环。如有拾到，请及时联系我，万分感谢！',
       images: [
-        'https://picsum.photos/seed/bag1/600/600',
-        'https://picsum.photos/seed/bag2/600/600',
-        'https://picsum.photos/seed/bag3/600/600'
+        { id: 1, sort_order: 0, url: 'https://picsum.photos/seed/bag1/600/600', review_status: 'approved' },
+        { id: 2, sort_order: 1, url: 'https://picsum.photos/seed/bag2/600/600', review_status: 'approved' },
+        { id: 3, sort_order: 2, url: 'https://picsum.photos/seed/bag3/600/600', review_status: 'approved' }
       ],
       ownerName: '林同学',
       contact: {
         wechat: 'lin_xiaolin',
         phone: '138****1234'
-      },
-      description:
-
-  '8月20日下午在图书馆三楼自习区丢失一个黑色双肩背包，内有一台银色笔记本电脑（带蓝色贴纸）、若干书本和一副耳机。\n' +
-        '包外侧有一处轻微磨损，拉链头是金属圆环。如有拾到，请及时联系我，万分感谢！'
+      }
     })
   }
 
@@ -208,7 +218,11 @@
     ElMessage.success(isFavorite.value ? '收藏成功' : '已取消收藏')
   }
 
-  async function copyText(text: string) {
+    async function copyText(text: string | undefined) {
+    if (!text) {
+      ElMessage.warning('暂无联系方式')
+      return
+    }
     try {
       await navigator.clipboard.writeText(text)
       ElMessage.success('已复制到剪贴板')
