@@ -136,5 +136,13 @@ else:
         }
     }
 
-# CORS：开发期放开所有来源，前端联调用；上线收紧到具体域名。
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS：env 驱动。开发期默认全放开（前端联调）；生产 .env 设置
+#   CORS_ALLOW_ALL_ORIGINS=false
+#   CORS_ALLOWED_ORIGINS=https://example.com,http://118.25.145.183
+# 来收紧到具体来源（注意：CORS_ALLOW_ALL_ORIGINS=true 时白名单不生效）。
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "true").lower() == "true"
+CORS_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if o.strip()
+]
