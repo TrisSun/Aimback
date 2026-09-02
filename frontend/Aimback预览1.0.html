@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aimback 失物招领 · 界面预览</title>
+<style>
+:root{
+  --bg:#F5F6F7;
+  --card:#FFFFFF;
+  --text-1:#1D2129;
+  --text-2:#4E5969;
+  --text-3:#86909C;
+  --text-4:#C9CDD4;
+  --border:#E5E6EB;
+  --border-light:#F2F3F5;
+  --radius:12px;
+  --shadow:0 2px 8px rgba(0,0,0,.06);
+  --shadow-hover:0 6px 20px rgba(0,0,0,.10);
+}
+
+/* 方案A 青绿（推荐） */
+:root[data-theme="green"]{
+  --brand:#00A870;
+  --brand-dark:#00915F;
+  --brand-light:#E8F8F2;
+  --brand-text:#FFFFFF;
+  --done:#1677FF;
+  --done-bg:#E8F3FF;
+}
+/* 方案B 信任蓝 */
+:root[data-theme="blue"]{
+  --brand:#1677FF;
+  --brand-dark:#0E5FD8;
+  --brand-light:#E8F3FF;
+  --brand-text:#FFFFFF;
+  --done:#00B42A;
+  --done-bg:#E8FFEA;
+}
+/* 方案C 暖橙 */
+:root[data-theme="orange"]{
+  --brand:#FF6B35;
+  --brand-dark:#E85A28;
+  --brand-light:#FFF3EC;
+  --brand-text:#FFFFFF;
+  --done:#00B42A;
+  --done-bg:#E8FFEA;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#EDEFF2;color:var(--text-1);line-height:1.6;padding:0 0 48px;
+}
+
+/* 顶部工具条 */
+.toolbar{
+  background:#fff;border-bottom:1px solid var(--border);
+  padding:12px 20px;display:flex;align-items:center;gap:20px;
+  flex-wrap:wrap;position:sticky;top:0;z-index:50;
+}
+.toolbar .group{display:flex;align-items:center;gap:8px;}
+.toolbar .lbl{font-size:12px;color:var(--text-3);}
+.tbtn{
+  height:30px;padding:0 14px;border-radius:6px;border:1px solid var(--border);
+  background:#fff;font-size:13px;color:var(--text-2);cursor:pointer;transition:all .2s;
+}
+.tbtn:hover{border-color:var(--brand);color:var(--brand);}
+.tbtn.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:500;}
+.tbtn .rec{font-size:11px;opacity:.85;}
+
+/* 站点头部 */
+.site-head{background:#fff;padding:18px 0;border-bottom:1px solid var(--border-light);}
+.site-head .inner{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:20px;}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;flex-shrink:0;}
+.logo .mark{
+  width:34px;height:34px;border-radius:9px;background:var(--brand);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;
+  transition:background .2s;
+}
+.search{flex:1;display:flex;max-width:440px;}
+.search input{
+  flex:1;height:40px;padding:0 14px;border:1px solid var(--border);border-right:none;
+  border-radius:8px 0 0 8px;font-size:14px;outline:none;transition:border-color .2s;
+}
+.search input:focus{border-color:var(--brand);}
+.search button{
+  height:40px;padding:0 22px;background:var(--brand);color:var(--brand-text);
+  border:none;border-radius:0 8px 8px 0;font-size:14px;cursor:pointer;transition:background .2s;
+}
+.search button:hover{background:var(--brand-dark);}
+.btn-pub{
+  height:40px;padding:0 18px;border-radius:8px;border:1px solid var(--brand);
+  background:#fff;color:var(--brand);font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;
+}
+.btn-pub:hover{background:var(--brand-light);}
+.btn-msg{
+  position:relative;height:40px;width:40px;border-radius:8px;border:1px solid var(--border);
+  background:#fff;font-size:17px;cursor:pointer;transition:all .2s;
+}
+.btn-msg:hover{border-color:var(--brand);}
+.btn-msg .badge{
+  position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;
+  background:#F53F3F;color:#fff;border-radius:9px;font-size:11px;line-height:17px;
+  text-align:center;font-weight:600;border:2px solid #fff;
+}
+
+/* 主体布局 */
+.main{max-width:1080px;margin:20px auto 0;padding:0 20px;display:flex;gap:20px;}
+.side{
+  width:168px;flex-shrink:0;background:#fff;border-radius:var(--radius);
+  padding:12px;height:fit-content;box-shadow:var(--shadow);
+}
+.side .t{
+  font-size:13px;font-weight:600;color:var(--text-1);padding:6px 10px 10px;
+  display:flex;align-items:center;gap:6px;
+}
+.side .t .step{
+  width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;
+  font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.side .it{
+  padding:9px 10px;border-radius:6px;font-size:13px;color:var(--text-2);
+  cursor:pointer;transition:all .2s;
+}
+.side .it:hover{background:var(--border-light);}
+.side .it.on{background:var(--brand-light);color:var(--brand);font-weight:500;}
+
+.content{flex:1;min-width:0;}
+
+/* 校区选择 */
+.campus-bar{
+  background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.campus-bar .cap{
+  font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;
+}
+.campus-bar .cap .step{
+  width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;
+  font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.campus-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.campus{
+  padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
+  cursor:pointer;transition:all .2s;background:#fff;
+}
+.campus:hover{border-color:var(--brand);}
+.campus.on{border-color:var(--brand);background:var(--brand-light);}
+.campus .cn{font-size:14px;font-weight:600;margin-bottom:2px;}
+.campus.on .cn{color:var(--brand);}
+.campus .cs{font-size:12px;color:var(--text-3);}
+
+.filter-bar{
+  background:#fff;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);font-size:13px;
+}
+.chip{
+  padding:5px 12px;border-radius:14px;background:var(--border-light);
+  color:var(--text-2);cursor:pointer;transition:all .2s;
+}
+.chip:hover{background:var(--brand-light);color:var(--brand);}
+.chip.on{background:var(--brand);color:#fff;}
+.count{margin-left:auto;color:var(--text-3);font-size:12px;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.card{
+  background:#fff;border-radius:var(--radius);overflow:hidden;cursor:pointer;
+  box-shadow:var(--shadow);transition:all .25s;
+}
+.card:hover{box-shadow:var(--shadow-hover);transform:translateY(-3px);}
+.card .img{
+  height:140px;display:flex;align-items:center;justify-content:center;
+  font-size:38px;background:linear-gradient(135deg,#F7F9FB,#EDF1F5);
+}
+.card .body{padding:12px;}
+.card .name{
+  font-size:15px;font-weight:500;margin-bottom:7px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.card .meta{font-size:12px;color:var(--text-3);display:flex;gap:4px;margin-bottom:3px;}
+.card .foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+
+.tag{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;
+  border-radius:4px;font-size:12px;font-weight:500;
+}
+.tag .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.tag-find{background:#FFF7E8;color:#FF7D00;}
+.tag-claim{background:var(--brand-light);color:var(--brand);}
+.tag-done{background:var(--done-bg);color:var(--done);}
+.cat{font-size:12px;color:var(--text-3);}
+
+/* 详情页 */
+.detail{background:#fff;border-radius:16px;padding:24px;box-shadow:var(--shadow);display:flex;gap:28px;}
+.gallery{flex:0 0 400px;}
+.big-img{
+  height:400px;border-radius:12px;background:linear-gradient(135deg,#F7F9FB,#EDF1F5);
+  display:flex;align-items:center;justify-content:center;font-size:96px;position:relative;
+}
+.big-img .tag{position:absolute;top:14px;left:14px;}
+.thumbs{display:flex;gap:10px;margin-top:12px;}
+.thumb{
+  width:70px;height:70px;border-radius:8px;background:linear-gradient(135deg,#F7F9FB,#EDF1F5);
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  cursor:pointer;border:2px solid transparent;transition:border-color .2s;
+}
+.thumb.on{border-color:var(--brand);}
+.info{flex:1;min-width:0;display:flex;flex-direction:column;}
+.info h1{font-size:23px;font-weight:600;line-height:1.4;margin-bottom:12px;}
+.metas{background:#FAFBFC;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:11px;}
+.mrow{display:flex;align-items:center;font-size:14px;}
+.mrow .k{color:var(--text-3);width:72px;flex-shrink:0;}
+.mrow .v{font-weight:500;}
+.owner{display:flex;align-items:center;gap:10px;margin:18px 0;}
+.avatar{
+  width:36px;height:36px;border-radius:50%;background:var(--brand-light);color:var(--brand);
+  display:flex;align-items:center;justify-content:center;font-weight:600;
+}
+.oname{font-size:14px;font-weight:500;}
+.otime{font-size:12px;color:var(--text-3);}
+.acts{display:flex;gap:12px;}
+.btn{
+  height:44px;padding:0 24px;border-radius:8px;font-size:15px;font-weight:500;
+  border:1px solid transparent;cursor:pointer;transition:all .2s;
+}
+.btn-main{background:var(--brand);color:var(--brand-text);flex:1;}
+.btn-main:hover{background:var(--brand-dark);}
+.btn-sec{background:#fff;border-color:var(--border);color:var(--text-1);}
+.btn-sec:hover{border-color:var(--brand);color:var(--brand);}
+.btn-sec.fav{color:var(--brand);border-color:var(--brand);background:var(--brand-light);}
+.btn-danger{background:#fff;border-color:#F53F3F;color:#F53F3F;}
+.btn-danger:hover{background:#F53F3F;color:#fff;}
+.safety{
+  display:flex;align-items:center;gap:6px;margin-top:16px;
+  font-size:12px;color:var(--text-3);
+}
+.desc{
+  background:#fff;border-radius:16px;padding:22px 24px;margin-top:16px;box-shadow:var(--shadow);
+}
+.desc h2{font-size:17px;font-weight:600;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--brand);}
+.desc p{font-size:14px;line-height:1.85;color:var(--text-2);white-space:pre-line;}
+.back{
+  display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;
+  font-size:13px;color:var(--text-3);cursor:pointer;transition:color .2s;
+}
+.back:hover{color:var(--brand);}
+
+/* 消息页 */
+.msg-wrap{max-width:760px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+.msg-head{padding:18px 22px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px;}
+.msg-head h2{font-size:17px;font-weight:600;}
+.msg-head .n{font-size:12px;color:var(--text-3);}
+.msg-tabs{display:flex;gap:6px;padding:12px 22px;border-bottom:1px solid var(--border-light);}
+.msg-tabs .mt{
+  padding:6px 14px;border-radius:14px;font-size:13px;color:var(--text-2);
+  cursor:pointer;transition:all .2s;
+}
+.msg-tabs .mt:hover{background:var(--border-light);}
+.msg-tabs .mt.on{background:var(--brand-light);color:var(--brand);font-weight:500;}
+.msg-item{
+  display:flex;gap:14px;padding:16px 22px;border-bottom:1px solid var(--border-light);
+  cursor:pointer;transition:background .2s;
+}
+.msg-item:hover{background:#FAFBFC;}
+.msg-item.unread{background:var(--brand-light);}
+.msg-item.unread:hover{background:var(--brand-light);filter:brightness(.98);}
+.msg-ico{
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:19px;
+}
+.ico-claim{background:var(--brand-light);}
+.ico-ok{background:#E8FFEA;}
+.ico-sys{background:#E8F3FF;}
+.msg-body{flex:1;min-width:0;}
+.msg-top{display:flex;align-items:center;gap:8px;margin-bottom:3px;}
+.msg-title{font-size:14px;font-weight:600;}
+.msg-time{font-size:12px;color:var(--text-3);margin-left:auto;flex-shrink:0;}
+.msg-sub{
+  font-size:13px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.msg-item .red{width:8px;height:8px;border-radius:50%;background:#F53F3F;flex-shrink:0;align-self:center;}
+
+/* 弹窗 */
+.mask{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;
+  align-items:center;justify-content:center;z-index:100;padding:20px;
+}
+.mask.show{display:flex;}
+.modal{
+  background:#fff;border-radius:16px;width:100%;max-width:430px;
+  overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.2);
+}
+.modal .head{
+  padding:16px 20px;border-bottom:1px solid var(--border-light);
+  font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px;
+}
+.modal .body{padding:20px;max-height:60vh;overflow-y:auto;}
+.tip{font-size:13px;color:var(--text-3);line-height:1.7;margin-bottom:16px;}
+.qa{margin-bottom:15px;}
+.qa .q{font-size:14px;font-weight:500;margin-bottom:7px;display:flex;gap:7px;}
+.qa .q .n{color:var(--brand);}
+.qa input{
+  width:100%;height:38px;padding:0 12px;border:1px solid var(--border);
+  border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;
+}
+.qa input:focus{border-color:var(--brand);}
+.modal .foot{
+  padding:12px 20px;background:var(--border-light);
+  display:flex;justify-content:flex-end;gap:10px;
+}
+.modal .foot .btn{height:36px;padding:0 18px;font-size:14px;flex:none;}
+
+/* 认领审核内容 */
+.review-item{background:#FAFBFC;border-radius:8px;padding:12px 14px;margin-bottom:10px;}
+.review-item .rq{font-size:13px;color:var(--text-3);margin-bottom:4px;}
+.review-item .ra{font-size:14px;font-weight:500;color:var(--text-1);}
+.contact-box{
+  background:var(--brand-light);border-radius:10px;padding:14px;margin-top:6px;
+}
+.contact-box .ct{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--brand);}
+.crow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px;}
+.crow .cl{color:var(--text-3);width:40px;flex-shrink:0;}
+.crow .cv{flex:1;font-weight:500;}
+
+.toast{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--text-1);color:#fff;padding:12px 24px;border-radius:8px;
+  font-size:14px;z-index:200;opacity:0;transition:all .3s;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+.hide{display:none !important;}
+
+/* 赏金横幅（详情页） */
+.reward-banner{
+  display:flex;align-items:center;gap:14px;margin-top:14px;
+  background:linear-gradient(135deg,#FFF7E8,#FFEFC7);
+  border:1px solid #FFD591;border-radius:12px;padding:12px 16px;
+}
+.reward-banner .rm{font-size:28px;font-weight:700;color:#D4380D;line-height:1;}
+.reward-banner .rt{font-size:13px;color:#874D00;font-weight:500;margin-bottom:3px;}
+.reward-banner .rd{font-size:12px;color:#874D00;}
+
+/* 发布页（赏金设置） */
+.pub{padding:20px 0;}
+.pub-card{background:#fff;border-radius:16px;padding:24px;box-shadow:var(--shadow);max-width:640px;margin:0 auto;}
+.pub-card h2{font-size:18px;font-weight:600;margin-bottom:4px;}
+.pub-card .sub{font-size:13px;color:var(--text-3);margin-bottom:20px;}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:14px;font-weight:500;margin-bottom:8px;}
+.field .req{color:#F53F3F;margin-left:2px;}
+.field input[type=text], .field textarea, .field select{
+  width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+  font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;
+}
+.field input:focus, .field textarea:focus, .field select:focus{border-color:var(--brand);}
+.field textarea{resize:vertical;min-height:80px;}
+.radio-row{display:flex;gap:10px;}
+.radio-row .r{
+  flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;
+  text-align:center;cursor:pointer;font-size:13px;transition:all .2s;
+}
+.radio-row .r.on{border-color:var(--brand);background:var(--brand-light);color:var(--brand);font-weight:500;}
+.fee-box{background:#FAFBFC;border:1px dashed var(--border);border-radius:10px;padding:14px 16px;margin-top:8px;}
+.fee-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--text-2);}
+.fee-row.total{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;font-weight:600;color:var(--text-1);}
+.fee-row .hl{color:#D4380D;font-weight:600;}
+.fee-note{font-size:12px;color:var(--text-3);margin-top:8px;line-height:1.6;}
+.fee-note b{color:#D4380D;}
+.fee-row.total .hl2{color:var(--brand);font-weight:700;}
+
+/* AI 智能匹配置顶消息 */
+.pinned{
+  display:flex;align-items:flex-start;gap:12px;padding:14px 22px;cursor:pointer;
+  background:linear-gradient(135deg,#E8F3FF,#F4F8FF);
+  border-bottom:1px solid var(--border-light);position:relative;transition:filter .2s;
+}
+.pinned:hover{filter:brightness(.98);}
+.pin-tag{
+  position:absolute;top:10px;right:14px;font-size:11px;color:#1677FF;
+  background:#fff;border:1px solid #BEDAFF;border-radius:4px;padding:1px 6px;
+}
+.pin-ico{
+  width:38px;height:38px;border-radius:50%;background:#fff;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid #BEDAFF;
+}
+.pin-title{font-size:14px;font-weight:600;color:#0E42D2;display:flex;align-items:center;gap:6px;}
+.pin-sub{font-size:12px;color:var(--text-2);line-height:1.65;margin-top:3px;}
+
+/* AI 生成验证问题 */
+.ai-sec{background:#FAFBFC;border:1px dashed var(--border);border-radius:10px;padding:14px 16px;margin-bottom:18px;}
+.ai-sec .ah{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.ai-sec .ah .at{font-size:14px;font-weight:500;}
+.ai-sec .ah .ab{
+  margin-left:auto;height:32px;padding:0 14px;border:none;border-radius:8px;
+  background:var(--brand);color:#fff;font-size:13px;cursor:pointer;transition:background .2s;
+}
+.ai-sec .ah .ab:hover{background:var(--brand-dark);}
+.ai-sec .ad{font-size:12px;color:var(--text-3);margin-bottom:10px;line-height:1.6;}
+.q-list{display:flex;flex-direction:column;gap:8px;}
+.q-item{
+  display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;font-size:13px;
+}
+.q-item .qn{color:var(--brand);font-weight:600;flex-shrink:0;}
+.q-item .qx{margin-left:auto;color:var(--text-4);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;}
+.q-item .qx:hover{color:#F53F3F;}
+.q-empty{font-size:13px;color:var(--text-3);text-align:center;padding:8px 0;}
+.ai-loading{font-size:13px;color:var(--text-3);text-align:center;padding:10px 0;}
+
+/* 聊天抽屉 */
+.chat-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:120;display:none;align-items:flex-end;justify-content:center;}
+.chat-mask.show{display:flex;}
+.chat{
+  width:100%;max-width:480px;height:80vh;background:#F5F6F7;border-radius:16px 16px 0 0;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -8px 40px rgba(0,0,0,.18);animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
+.chat-head{background:#fff;padding:14px 18px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-head .av{width:34px;height:34px;border-radius:50%;background:var(--brand-light);color:var(--brand);display:flex;align-items:center;justify-content:center;font-weight:600;}
+.chat-head .nm{font-size:15px;font-weight:600;}
+.chat-head .st{font-size:12px;color:var(--text-3);}
+.chat-head .x{margin-left:auto;font-size:22px;color:var(--text-3);cursor:pointer;line-height:1;padding:0 4px;}
+.verify-block{background:#fff;border-bottom:1px solid var(--border-light);padding:14px 18px;flex-shrink:0;}
+.verify-block .vh{font-size:13px;font-weight:600;color:var(--brand);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.vq{background:#FAFBFC;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:13px;}
+.vq .q{color:var(--text-3);margin-bottom:3px;}
+.vq .a{font-weight:500;color:var(--text-1);}
+.vq input{width:100%;height:34px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;outline:none;margin-top:5px;}
+.vq input:focus{border-color:var(--brand);}
+.verify-block .vt{font-size:12px;color:#00B42A;margin-top:4px;display:flex;align-items:center;gap:4px;}
+.verify-block .vbtn{width:100%;height:36px;margin-top:10px;font-size:14px;border:none;border-radius:8px;background:var(--brand);color:#fff;cursor:pointer;}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.bubble{max-width:74%;padding:9px 13px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word;}
+.bubble.me{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:3px;}
+.bubble.he{align-self:flex-start;background:#fff;color:var(--text-1);border-bottom-left-radius:3px;box-shadow:var(--shadow);}
+.bubble.sys{align-self:center;background:var(--border-light);color:var(--text-3);font-size:12px;padding:5px 12px;border-radius:10px;}
+.chat-input{display:flex;gap:10px;padding:12px 14px;background:#fff;border-top:1px solid var(--border-light);flex-shrink:0;}
+.chat-input input{flex:1;height:40px;padding:0 14px;border:1px solid var(--border);border-radius:20px;font-size:14px;outline:none;}
+.chat-input input:focus{border-color:var(--brand);}
+.chat-input input:disabled{background:#F2F3F5;cursor:not-allowed;}
+.chat-input button{height:40px;padding:0 20px;border:none;border-radius:20px;background:var(--brand);color:#fff;font-size:14px;cursor:pointer;}
+.chat-input button:disabled{background:var(--border);color:var(--text-3);cursor:not-allowed;}
+</style>
+</head>
+<body data-theme="green">
+
+<!-- 顶部工具条 -->
+<div class="toolbar">
+  <div class="group">
+    <span class="lbl">配色</span>
+    <button class="tbtn on" data-theme="green">A 青绿 <span class="rec">（推荐）</span></button>
+    <button class="tbtn" data-theme="blue">B 信任蓝</button>
+    <button class="tbtn" data-theme="orange">C 暖橙</button>
+  </div>
+  <div class="group" style="margin-left:auto">
+    <span class="lbl">页面</span>
+    <button class="tbtn on" data-page="home">首页</button>
+    <button class="tbtn" data-page="detail">详情页</button>
+    <button class="tbtn" data-page="msg">消息</button>
+    <button class="tbtn" data-page="publish">发布页</button>
+  </div>
+</div>
+
+<!-- 站点头部 -->
+<div class="site-head">
+  <div class="inner">
+    <div class="logo"><span class="mark">A</span>Aimback</div>
+    <div class="search">
+      <input id="kw" placeholder="搜索失物 / 招领信息">
+      <button onclick="toast('搜索：' + (document.getElementById('kw').value || '全部'))">搜索</button>
+    </div>
+    <button class="btn-msg" onclick="switchPage('msg')" title="消息">🔔<span class="badge" id="badge">2</span></button>
+    <button class="btn-pub" onclick="switchPage('publish')">＋ 发布信息</button>
+  </div>
+</div>
+
+<!-- ========== 首页 ========== -->
+<div id="page-home">
+  <div class="main">
+    <aside class="side">
+      <div class="t"><span class="step">2</span>物品分类</div>
+      <div class="it on" data-cat="all">全部</div>
+      <div class="it" data-cat="electronics">电子设备</div>
+      <div class="it" data-cat="documents">证件</div>
+      <div class="it" data-cat="bags">包袋</div>
+      <div class="it" data-cat="clothing">衣物</div>
+      <div class="it" data-cat="accessories">饰品</div>
+      <div class="it" data-cat="stationery">文具</div>
+      <div class="it" data-cat="keys">钥匙与门禁</div>
+      <div class="it" data-cat="other">其他</div>
+    </aside>
+
+    <div class="content">
+      <div class="campus-bar">
+        <div class="cap"><span class="step">1</span>选择校区</div>
+        <div class="campus-row">
+          <div class="campus on" data-campus="jjl">
+            <div class="cn">将军路校区</div>
+            <div class="cs">南京 · 江宁</div>
+          </div>
+          <div class="campus" data-campus="tmh">
+            <div class="cn">天目湖校区</div>
+            <div class="cs">常州 · 溧阳</div>
+          </div>
+          <div class="campus" data-campus="mgg">
+            <div class="cn">明故宫校区</div>
+            <div class="cs">南京 · 秦淮</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <span class="chip on">全部</span>
+        <span class="chip">我丢的</span>
+        <span class="chip">我捡的</span>
+        <span class="count" id="count">共 2 条</span>
+      </div>
+
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 详情页 ========== -->
+<div id="page-detail" class="hide">
+  <div class="main" style="flex-direction:column">
+    <div class="back" id="backBtn">← 返回列表</div>
+    <div class="detail">
+      <div class="gallery">
+        <div class="big-img" id="bigImg">
+          🎒
+          <span class="tag tag-find" id="dTag"><i class="dot"></i>寻找中</span>
+        </div>
+        <div class="thumbs">
+          <div class="thumb on" onclick="pickThumb(this,'🎒')">🎒</div>
+          <div class="thumb" onclick="pickThumb(this,'💻')">💻</div>
+          <div class="thumb" onclick="pickThumb(this,'🎧')">🎧</div>
+        </div>
+      </div>
+
+      <div class="info">
+        <h1 id="dTitle">黑色双肩背包（内含银色笔记本电脑）</h1>
+        <div class="metas">
+          <div class="mrow"><span class="k">所属校区</span><span class="v" id="dCampus">将军路校区</span></div>
+          <div class="mrow"><span class="k">丢失地点</span><span class="v" id="dLoc">图书馆三楼自习区</span></div>
+          <div class="mrow"><span class="k">丢失时间</span><span class="v" id="dTime">2026-08-20 14:30</span></div>
+          <div class="mrow"><span class="k">物品类别</span><span class="v" id="dCat">包袋 / 双肩包</span></div>
+          <div class="mrow"><span class="k">物品颜色</span><span class="v">黑色</span></div>
+        </div>
+
+        <div class="owner">
+          <div class="avatar" id="dAvatar">林</div>
+          <span class="oname" id="dOwner">林同学</span>
+          <span class="otime" id="dPub">发布于 2026-08-21</span>
+        </div>
+
+        <div class="acts">
+          <button class="btn btn-main" id="claimBtn">🔒 我要认领</button>
+          <button class="btn btn-sec" id="favBtn">☆ 收藏</button>
+        </div>
+
+        <div class="safety">🛡 认领需通过验证问答，通过后才会交换联系方式</div>
+
+        <div class="reward-banner hide" id="rewardBanner">
+          <div class="rm" id="rewardMoney">¥0</div>
+          <div>
+            <div class="rt" id="rewardTitle">拾获者可得赏金（已扣手续费）</div>
+            <div class="rd" id="rewardDetail"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="desc">
+      <h2>详细描述</h2>
+      <p id="dDesc">8月20日下午在图书馆三楼自习区丢失一个黑色双肩背包，内有一台银色笔记本电脑（带蓝色贴纸）、若干书本和一副耳机。
+包外侧有一处轻微磨损，拉链头是金属圆环。如有拾到，请及时联系我，万分感谢！</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 消息页 ========== -->
+<div id="page-msg" class="hide">
+  <div class="main" style="display:block">
+    <div class="msg-wrap">
+      <div class="msg-head">
+        <h2>消息</h2>
+        <span class="n" id="unreadN">2 条未读</span>
+      </div>
+      <div class="msg-tabs">
+        <span class="mt on">全部</span>
+        <span class="mt">认领消息</span>
+        <span class="mt">系统通知</span>
+      </div>
+
+      <!-- AI 智能匹配 · 置顶 -->
+      <div class="pinned" onclick="toast('AI 正在持续匹配，匹配到会立即推送')">
+        <span class="pin-tag">置顶</span>
+        <div class="pin-ico">🤖</div>
+        <div>
+          <div class="pin-title">AI 智能匹配已开启</div>
+          <div class="pin-sub">系统正在已上传的失物中自动匹配与你丢失物品相关的信息，匹配到后会第一时间推送给你，请耐心等候。</div>
+        </div>
+      </div>
+
+      <div id="msgList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 认领申请弹窗（访客视角） -->
+<div class="mask" id="mask">
+  <div class="modal">
+    <div class="head">🔒 认领验证</div>
+    <div class="body">
+      <p class="tip">为防止冒领，请回答发布者设置的验证问题。提交后由发布者确认，通过后你才能看到对方的联系方式。</p>
+      <div class="qa">
+        <div class="q"><span class="n">Q1</span> 这个背包外侧有什么特征？</div>
+        <input id="a1" placeholder="请输入你的答案">
+      </div>
+      <div class="qa">
+        <div class="q"><span class="n">Q2</span> 包里的电脑是什么颜色？</div>
+        <input id="a2" placeholder="请输入你的答案">
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn btn-sec" onclick="closeModal()">取消</button>
+      <button class="btn btn-main" onclick="submitClaim()">提交认领</button>
+    </div>
+  </div>
+</div>
+
+<!-- 认领审核弹窗（发布者视角） -->
+<div class="mask" id="mask2">
+  <div class="modal">
+    <div class="head">📨 收到一条认领申请</div>
+    <div class="body">
+      <p class="tip">对方已回答你设置的验证问题。核对无误后通过，通过后双方互相可见联系方式。</p>
+      <div class="review-item">
+        <div class="rq">物品</div>
+        <div class="ra">黑色双肩背包（内含银色笔记本电脑）</div>
+      </div>
+      <div class="review-item">
+        <div class="rq">申请人</div>
+        <div class="ra">王同学 · 将军路校区</div>
+      </div>
+      <div class="review-item">
+        <div class="rq">Q1 这个背包外侧有什么特征？</div>
+        <div class="ra">有一处轻微磨损，拉链头是金属圆环</div>
+      </div>
+      <div class="review-item">
+        <div class="rq">Q2 包里的电脑是什么颜色？</div>
+        <div class="ra">银色，上面贴了蓝色贴纸</div>
+      </div>
+      <div id="contactArea" class="hide">
+        <div class="contact-box">
+          <div class="ct">✅ 已通过，双方联系方式已互相可见</div>
+          <div class="crow"><span class="cl">微信</span><span class="cv">wang_2023</span></div>
+          <div class="crow"><span class="cl">手机</span><span class="cv">139****5678</span></div>
+        </div>
+        <button class="btn btn-main" style="width:100%;margin-top:12px" onclick="openChat('wang')">💬 进入对话，约定取物地点</button>
+      </div>
+    </div>
+    <div class="foot" id="reviewFoot">
+      <button class="btn btn-danger" onclick="rejectClaim()">拒绝</button>
+      <button class="btn btn-main" onclick="approveClaim()">核对无误，通过</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 发布页（赏金设置） ========== -->
+<div id="page-publish" class="hide">
+  <div class="main" style="flex-direction:column">
+    <div class="back" onclick="switchPage('home')">← 返回首页</div>
+    <div class="pub-card">
+      <h2>发布失物信息</h2>
+      <div class="sub">填写物品信息并设置悬赏，拾获者归还后你可发放赏金</div>
+
+      <div class="field">
+        <label>信息类型</label>
+        <div class="radio-row">
+          <div class="r on" data-pt="lost">我丢失了物品</div>
+          <div class="r" data-pt="found">我捡到了物品</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>物品名称<span class="req">*</span></label>
+        <input type="text" placeholder="如：黑色双肩背包">
+      </div>
+
+      <div class="field">
+        <label>所在校区</label>
+        <select>
+          <option>将军路校区</option>
+          <option>天目湖校区</option>
+          <option>明故宫校区</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>丢失 / 拾获地点<span class="req">*</span></label>
+        <input type="text" placeholder="如：图书馆三楼自习区">
+      </div>
+
+      <div class="field">
+        <label>详细描述<span class="req">*</span></label>
+        <textarea id="descInput" placeholder="描述物品特征（颜色、磨损、内含物…），AI 会据此生成验证问题"></textarea>
+      </div>
+
+      <!-- AI 自动生成验证问题 -->
+      <div class="ai-sec">
+        <div class="ah">
+          <span style="font-size:17px">🤖</span>
+          <span class="at">验证问题（防冒领）</span>
+          <button class="ab" onclick="aiGenQuestions()">用 AI 生成</button>
+        </div>
+        <div class="ad">根据上方详细描述，AI 自动提炼关键特征生成验证问题，用于认领时核对身份。</div>
+        <div class="q-list" id="qList"><div class="q-empty">填写详细描述后，点击「用 AI 生成」自动生成问题</div></div>
+      </div>
+
+      <div class="field" id="rewardField">
+        <label>设置悬赏（系统自动扣除手续费后对外展示）</label>
+        <input type="text" id="rewardInput" inputmode="numeric" placeholder="0 表示不设赏金" value="50" oninput="calcFee()">
+        <div class="fee-box" id="feeBox"></div>
+      </div>
+
+      <button class="btn btn-main" style="width:100%;margin-top:8px" onclick="toast('（预览）已发布，AI 开始自动匹配')">发布信息</button>
+    </div>
+  </div>
+</div>
+
+<!-- 聊天抽屉 -->
+<div class="chat-mask" id="chatMask">
+  <div class="chat">
+    <div class="chat-head">
+      <div class="av" id="chatAv">王</div>
+      <div>
+        <div class="nm" id="chatName">王同学</div>
+        <div class="st" id="chatStatus">已通过验证</div>
+      </div>
+      <div class="x" onclick="closeChat()">×</div>
+    </div>
+    <div class="verify-block" id="verifyBlock"></div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-input">
+      <input id="chatInput" placeholder="完成验证问答后可开始对话">
+      <button id="chatSend" onclick="sendChat()">发送</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CAMPUS = {jjl:'将军路校区', tmh:'天目湖校区', mgg:'明故宫校区'};
+
+const items = [
+  {icon:'🎒', name:'黑色双肩背包（含电脑）', loc:'图书馆三楼自习区', time:'2026-08-20', cat:'包袋', catKey:'bags', status:'find', campus:'jjl',
+   owner:'林', ownerName:'林同学', pub:'2026-08-21', campusName:'将军路校区',
+   desc:'8月20日下午在图书馆三楼自习区丢失一个黑色双肩背包，内有一台银色笔记本电脑（带蓝色贴纸）、若干书本和一副耳机。\n包外侧有一处轻微磨损，拉链头是金属圆环。如有拾到，请及时联系我，万分感谢！'},
+  {icon:'🎧', name:'AirPods 无线耳机', loc:'操场跑道', time:'2026-08-18', cat:'电子设备', catKey:'electronics', status:'find', campus:'jjl',
+   owner:'陈', ownerName:'陈同学', pub:'2026-08-19', campusName:'将军路校区',
+   desc:'跑步时从口袋滑落，白色 AirPods 二代，充电盒背面有一道划痕。'},
+  {icon:'🪪', name:'学生证（李某某）', loc:'食堂一楼', time:'2026-08-19', cat:'证件', catKey:'documents', status:'claim', campus:'tmh',
+   owner:'李', ownerName:'李同学', pub:'2026-08-19', campusName:'天目湖校区',
+   desc:'在天目湖校区食堂一楼捡到一张学生证，已交至食堂服务台，请失主凭有效证件认领。'},
+  {icon:'☂️', name:'蓝色折叠雨伞', loc:'教学楼 B 座', time:'2026-08-17', cat:'衣物', catKey:'clothing', status:'done', campus:'mgg',
+   owner:'周', ownerName:'周同学', pub:'2026-08-17', campusName:'明故宫校区',
+   desc:'明故宫校区教学楼 B 座拾获一把蓝色折叠伞，伞柄是木质的，已完成交接。'},
+  {icon:'🔑', name:'钥匙串（3 把钥匙）', loc:'体育馆更衣室', time:'2026-08-16', cat:'钥匙门禁', catKey:'keys', status:'find', campus:'mgg',
+   owner:'吴', ownerName:'吴同学', pub:'2026-08-16', campusName:'明故宫校区',
+   desc:'体育馆更衣室捡到一串钥匙，共 3 把，挂着一个蓝色门禁卡套。'}
+];
+
+// 赏金：失主发布时设置，平台收取 10% 手续费
+// 对外展示的赏金 = 自动扣除手续费后的实得金额
+const FEE_RATE = 0.1;
+items[0].reward = 50;   // 黑色双肩背包
+items[1].reward = 30;   // AirPods
+items[4].reward = 20;   // 钥匙串
+
+function feeOf(v){ return Math.round(v * FEE_RATE); }
+function netOf(v){ return v - feeOf(v); }
+
+// 聊天会话数据（验证问答为必填第一步）
+const convos = {
+  // 我是失主，收到王同学的认领 —— 已通过验证，可对话
+  wang:{
+    name:'王同学', av:'王', verified:true,
+    qs:[
+      {q:'这个背包外侧有什么特征？', a:'有一处轻微磨损，拉链头是金属圆环'},
+      {q:'包里的电脑是什么颜色？', a:'银色，上面贴了蓝色贴纸'}
+    ],
+    msgs:[
+      {t:'sys', c:'验证已通过，现在可以沟通取物地点'},
+      {t:'he', c:'东西还在我这儿，你方便的话我放图书馆一楼失物招领处'},
+      {t:'me', c:'好的！我下午两三点到，麻烦你了🙏'},
+      {t:'he', c:'没问题，我贴个便利贴写你名字'}
+    ]
+  },
+  // 我是认领者，刚发起认领 —— 待我完成验证问答才能对话
+  applied:{
+    name:'林同学', av:'林', verified:false,
+    qs:[
+      {q:'这个背包外侧有什么特征？', a:''},
+      {q:'包里的电脑是什么颜色？', a:''}
+    ],
+    msgs:[]
+  }
+};
+
+const msgs = [
+  {ico:'🙋', cls:'ico-claim', title:'王同学 发起了认领申请', sub:'物品：黑色双肩背包（内含银色笔记本电脑）', time:'2 分钟前', unread:true, type:'claim', chat:'wang'},
+  {ico:'✅', cls:'ico-ok',    title:'你的认领已通过',                 sub:'物品：学生证（李某某）· 对方已确认你的身份', time:'1 小时前', unread:true, type:'claim'},
+  {ico:'🤖', cls:'ico-sys',   title:'AI 匹配到 1 条可能相关的拾获信息', sub:'你发布的「银色 U 盘」匹配到 1 条拾获信息，点击查看', time:'昨天 15:20', unread:false, type:'sys'}
+];
+
+const tagMap = {
+  find:  {cls:'tag-find',  txt:'寻找中'},
+  claim: {cls:'tag-claim', txt:'认领中'},
+  done:  {cls:'tag-done',  txt:'已完成'}
+};
+
+let curCampus = 'jjl';
+let curCat = 'all';
+
+function renderGrid(){
+  const list = items.filter(it =>
+    (curCampus === 'all' || it.campus === curCampus) &&
+    (curCat === 'all' || it.catKey === curCat));
+  const g = document.getElementById('grid');
+  g.innerHTML = list.length ? list.map((it) => `
+    <div class="card" onclick="openDetail('${it.name}')">
+      <div class="img">${it.icon}</div>
+      <div class="body">
+        <div class="name">${it.name}</div>
+        <div class="meta">📍 ${it.campusName} · ${it.loc}</div>
+        <div class="meta">🕒 ${it.time}</div>
+        <div class="foot">
+          <span class="tag ${tagMap[it.status].cls}"><i class="dot"></i>${tagMap[it.status].txt}</span>
+          <span class="cat">${it.cat}${it.reward ? ' · 🏆¥' + netOf(it.reward) : ''}</span>
+        </div>
+      </div>
+    </div>
+  `).join('') : '<div style="padding:40px;text-align:center;color:#86909C;font-size:14px;grid-column:1/-1">该校区暂无相关失物信息</div>';
+  document.getElementById('count').textContent = '共 ' + list.length + ' 条';
+}
+
+function renderMsgs(){
+  const box = document.getElementById('msgList');
+  box.innerHTML = msgs.map((m,i) => `
+    <div class="msg-item ${m.unread?'unread':''}" onclick="openReview(${i})">
+      <div class="msg-ico ${m.cls}">${m.ico}</div>
+      <div class="msg-body">
+        <div class="msg-top">
+          <span class="msg-title">${m.title}</span>
+          <span class="msg-time">${m.time}</span>
+        </div>
+        <div class="msg-sub">${m.sub}</div>
+      </div>
+      ${m.unread ? '<span class="red"></span>' : ''}
+    </div>
+  `).join('');
+  const n = msgs.filter(m=>m.unread).length;
+  document.getElementById('badge').textContent = n;
+  document.getElementById('badge').style.display = n ? 'block' : 'none';
+  document.getElementById('unreadN').textContent = n + ' 条未读';
+}
+
+function openDetail(name){
+  const it = items.find(x => x.name === name);
+  if(!it) return;
+  document.getElementById('bigImg').firstChild.textContent = ' ' + it.icon + ' ';
+  document.getElementById('dTitle').textContent = it.name;
+  document.getElementById('dCampus').textContent = it.campusName;
+  document.getElementById('dLoc').textContent = it.loc;
+  document.getElementById('dTime').textContent = it.time;
+  document.getElementById('dCat').textContent = it.cat;
+  document.getElementById('dAvatar').textContent = it.owner;
+  document.getElementById('dOwner').textContent = it.ownerName;
+  document.getElementById('dPub').textContent = '发布于 ' + it.pub;
+  document.getElementById('dDesc').textContent = it.desc;
+  const t = document.getElementById('dTag');
+  t.className = 'tag ' + tagMap[it.status].cls;
+  t.innerHTML = '<i class="dot"></i>' + tagMap[it.status].txt;
+  const rb = document.getElementById('rewardBanner');
+  if(it.reward){
+    rb.classList.remove('hide');
+    // 对外只展示扣除手续费后的实得赏金
+    document.getElementById('rewardMoney').textContent = '¥' + netOf(it.reward);
+    document.getElementById('rewardDetail').textContent =
+      '失主悬赏 ¥' + it.reward + '，已自动扣除 ¥' + feeOf(it.reward) + ' 平台手续费（10%）';
+  } else {
+    rb.classList.add('hide');
+  }
+  resetClaimBtn(it.status);
+  switchPage('detail');
+}
+
+function resetClaimBtn(status){
+  const b = document.getElementById('claimBtn');
+  b.disabled = (status === 'done');
+  b.style.opacity = (status === 'done') ? '.6' : '1';
+  b.textContent = status === 'done' ? '已完成交接'
+                : status === 'claim' ? '⏳ 认领中，等待确认'
+                : '🔒 我要认领';
+}
+
+function switchPage(p){
+  ['home','detail','msg','publish'].forEach(k =>
+    document.getElementById('page-'+k).classList.toggle('hide', k !== p));
+  document.querySelectorAll('[data-page]').forEach(b =>
+    b.classList.toggle('on', b.dataset.page === p));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function pickThumb(el, icon){
+  document.querySelectorAll('.thumb').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('bigImg').firstChild.textContent = ' ' + icon + ' ';
+}
+
+function closeModal(){
+  document.getElementById('mask').classList.remove('show');
+  document.getElementById('mask2').classList.remove('show');
+}
+
+function submitClaim(){
+  const a1 = document.getElementById('a1').value.trim();
+  const a2 = document.getElementById('a2').value.trim();
+  if(!a1 || !a2){ toast('请回答全部验证问题'); return; }
+  closeModal();
+  document.getElementById('a1').value = '';
+  document.getElementById('a2').value = '';
+  msgs.unshift({ico:'🙋', cls:'ico-claim', title:'你 发起了认领申请',
+    sub:'已提交验证答案，等待对方确认', time:'刚刚', unread:true, type:'claim', chat:'applied'});
+  renderMsgs();
+  toast('已提交，等待发布者确认');
+  setTimeout(() => toast('提示：可到「消息」页查看进度'), 2300);
+}
+
+function openReview(i){
+  const m = msgs[i];
+  if(m.unread){ m.unread = false; renderMsgs(); }
+  if(m.type === 'sys'){ toast('系统通知：暂无更多详情'); return; }
+  if(m.chat){ openChat(m.chat); return; }   // 进入对话（聊天窗口）
+  document.getElementById('contactArea').classList.add('hide');
+  document.getElementById('reviewFoot').classList.remove('hide');
+  document.getElementById('mask2').classList.add('show');
+}
+
+function approveClaim(){
+  document.getElementById('contactArea').classList.remove('hide');
+  document.getElementById('reviewFoot').classList.add('hide');
+  toast('已通过，双方联系方式互相可见');
+}
+function rejectClaim(){
+  closeModal();
+  toast('已拒绝该认领申请');
+}
+
+/* ===== 聊天窗口 ===== */
+let curChat = null;
+function openChat(key){
+  curChat = JSON.parse(JSON.stringify(convos[key]));
+  document.getElementById('chatAv').textContent = curChat.av;
+  document.getElementById('chatName').textContent = curChat.name;
+  renderChat();
+  document.getElementById('chatMask').classList.add('show');
+}
+function renderChat(){
+  document.getElementById('chatStatus').textContent =
+    curChat.verified ? '已通过验证，可对话' : '等待完成验证';
+  const vb = document.getElementById('verifyBlock');
+  if(curChat.verified){
+    vb.innerHTML = '<div class="vh">🔒 第一步 · 认领验证问答（必填）</div>' +
+      curChat.qs.map(q => `<div class="vq"><div class="q">${q.q}</div><div class="a">${q.a || '—'}</div></div>`).join('') +
+      '<div class="vt">✓ 已通过验证，对话已开启</div>';
+  } else {
+    vb.innerHTML = '<div class="vh">🔒 第一步 · 认领验证问答（必填）</div>' +
+      curChat.qs.map((q,idx) =>
+        `<div class="vq"><div class="q">${q.q}</div><input id="vq${idx}" placeholder="请输入你的答案"></div>`).join('') +
+      '<button class="vbtn" onclick="submitVerify()">提交验证，开启对话</button>';
+  }
+  const cm = document.getElementById('chatMsgs');
+  cm.innerHTML = curChat.msgs.map(m =>
+    m.t === 'sys' ? `<div class="bubble sys">${m.c}</div>`
+                  : `<div class="bubble ${m.t}">${m.c}</div>`).join('');
+  cm.scrollTop = cm.scrollHeight;
+  const inp = document.getElementById('chatInput');
+  const btn = document.getElementById('chatSend');
+  inp.disabled = !curChat.verified;
+  btn.disabled = !curChat.verified;
+  inp.placeholder = curChat.verified ? '输入消息，约定取物地点…' : '完成验证问答后可开始对话';
+}
+function submitVerify(){
+  let ok = true;
+  curChat.qs.forEach((q,idx) => {
+    const v = (document.getElementById('vq'+idx).value || '').trim();
+    if(!v) ok = false;
+    q.a = v;
+  });
+  if(!ok){ toast('请回答全部验证问题'); return; }
+  curChat.verified = true;
+  curChat.msgs.push({t:'sys', c:'验证已通过，现在可以沟通取物地点'});
+  renderChat();
+  toast('验证通过，对话已开启');
+}
+function sendChat(){
+  const inp = document.getElementById('chatInput');
+  const v = inp.value.trim();
+  if(!v) return;
+  curChat.msgs.push({t:'me', c:v});
+  inp.value = '';
+  renderChat();
+}
+function closeChat(){ document.getElementById('chatMask').classList.remove('show'); }
+
+/* ===== 赏金 / 手续费计算 ===== */
+function calcFee(){
+  const raw = (document.getElementById('rewardInput').value || '').replace(/\D/g, '');
+  const v = parseInt(raw || '0', 10);
+  const fee = feeOf(v);
+  const net = netOf(v);
+  document.getElementById('feeBox').innerHTML = v > 0 ? `
+    <div class="fee-row"><span>你设置的悬赏总额</span><span>¥${v}</span></div>
+    <div class="fee-row"><span>平台手续费（${FEE_RATE*100}%，自动扣除）</span><span class="hl">- ¥${fee}</span></div>
+    <div class="fee-row total"><span>对外展示的赏金</span><span class="hl2">¥${net}</span></div>
+    <div class="fee-note">系统自动扣除手续费后，对外展示的赏金为 <b>¥${net}</b>，拾获者归还并通过验证后即可领取。</div>
+  ` : `<div class="fee-note">未设置赏金，拾获者归还后无需发放赏金。</div>`;
+}
+
+/* ===== AI 自动生成验证问题 ===== */
+let aiQuestions = [];
+function aiGenQuestions(){
+  const desc = (document.getElementById('descInput').value || '').trim();
+  if(!desc){ toast('请先填写详细描述'); return; }
+  const box = document.getElementById('qList');
+  box.innerHTML = '<div class="ai-loading">🤖 AI 正在分析描述特征…</div>';
+  setTimeout(() => {
+    const qs = [];
+    if(/黑|白|银|蓝|红|绿|灰|粉|金|紫|黄/.test(desc)) qs.push('这个物品的颜色是什么？');
+    if(/磨损|划痕|贴纸|破损|裂纹|污渍|掉了|缺/.test(desc)) qs.push('物品上有什么明显磨损或标记？');
+    if(/内|里面|装有|含|放有|装着/.test(desc)) qs.push('物品内部装有什么？');
+    if(/把|个|张|副|串|条|台|支|只/.test(desc)) qs.push('丢失的物品具体数量是多少？');
+    if(/牌|型号|品牌|MacBook|iPad|AirPods|华为|小米|苹果/.test(desc)) qs.push('物品的品牌或型号是什么？');
+    qs.push('你最后一次见到它是在什么位置？');
+    aiQuestions = qs.slice(0, 3);
+    renderQuestions();
+    toast('AI 已根据描述生成 ' + aiQuestions.length + ' 个验证问题');
+  }, 700);
+}
+function renderQuestions(){
+  const box = document.getElementById('qList');
+  box.innerHTML = aiQuestions.length
+    ? aiQuestions.map((q,i) =>
+        `<div class="q-item"><span class="qn">Q${i+1}</span><span>${q}</span><span class="qx" onclick="delQuestion(${i})">×</span></div>`
+      ).join('') + '<button class="vbtn" style="margin-top:6px;background:#fff;color:var(--brand);border:1px solid var(--brand)" onclick="aiGenQuestions()">重新生成</button>'
+    : '<div class="q-empty">填写详细描述后，点击「用 AI 生成」自动生成问题</div>';
+}
+function delQuestion(i){
+  aiQuestions.splice(i,1);
+  renderQuestions();
+}
+
+let toastTimer;
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+document.querySelectorAll('[data-theme]').forEach(b => {
+  b.onclick = () => {
+    document.documentElement.dataset.theme = b.dataset.theme;
+    document.querySelectorAll('[data-theme]').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  };
+});
+document.querySelectorAll('[data-page]').forEach(b => {
+  b.onclick = () => switchPage(b.dataset.page);
+});
+document.getElementById('backBtn').onclick = () => switchPage('home');
+document.getElementById('claimBtn').onclick = () => {
+  if(!document.getElementById('claimBtn').disabled)
+    document.getElementById('mask').classList.add('show');
+};
+document.getElementById('favBtn').onclick = function(){
+  const on = this.classList.toggle('fav');
+  this.textContent = on ? '★ 已收藏' : '☆ 收藏';
+  toast(on ? '收藏成功' : '已取消收藏');
+};
+document.getElementById('mask').onclick = e => { if(e.target.id === 'mask') closeModal(); };
+document.getElementById('mask2').onclick = e => { if(e.target.id === 'mask2') closeModal(); };
+
+document.querySelectorAll('.campus').forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll('.campus').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    curCampus = c.dataset.campus;
+    renderGrid();
+  };
+});
+document.querySelectorAll('.side .it').forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll('.side .it').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+    curCat = c.dataset.cat;
+    renderGrid();
+  };
+});
+document.querySelectorAll('.chip').forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+    c.classList.add('on');
+  };
+});
+
+// 聊天：点遮罩关闭、回车发送
+document.getElementById('chatMask').onclick = e => { if(e.target.id === 'chatMask') closeChat(); };
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+});
+
+// 发布页：丢失/拾获切换赏金字段 + 手续费实时计算
+document.querySelectorAll('[data-pt]').forEach(r => {
+  r.onclick = () => {
+    document.querySelectorAll('[data-pt]').forEach(x => x.classList.remove('on'));
+    r.classList.add('on');
+    const isLost = r.dataset.pt === 'lost';
+    document.getElementById('rewardField').style.display = isLost ? 'block' : 'none';
+    if(!isLost) document.getElementById('rewardInput').value = '';
+    calcFee();
+  };
+});
+
+calcFee();
+renderGrid();
+renderMsgs();
+</script>
+</body>
+</html>
