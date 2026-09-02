@@ -1,13 +1,21 @@
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, serializers, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from .filters import apply_post_hard_filters
+from .filters import apply_post_hard_filters, apply_post_search_query
 from .models import Post
 from .serializers import PostPublicSerializer, PostWriteSerializer
+
+
+class PostConflict(APIException):
+    """帖子状态不允许当前操作，对应契约约定的 409。"""
+
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "帖子当前状态不允许该操作"
+    default_code = "conflict"
 
 
 class PostPagination(PageNumberPagination):
@@ -44,6 +52,11 @@ def _parse_int(value: str) -> int | None:
         raise ValidationError({"detail": "place_id 参数格式不正确"})
 
 
+def _apply_sort(queryset, sort_value: str | None):
+    """默认按发布时间倒序、id 倒序；relevance 在 v0 暂不实现。"""
+    return queryset.order_by("-published_at", "-id")
+
+
 class PostListCreateView(generics.ListCreateAPIView):
     serializer_class = PostPublicSerializer
     pagination_class = PostPagination
@@ -57,16 +70,19 @@ class PostListCreateView(generics.ListCreateAPIView):
         qs = Post.objects.select_related(
             "found_region", "found_place", "attribute"
         ).prefetch_related("images")
-        return apply_post_hard_filters(
+        qs = apply_post_hard_filters(
             qs,
             type=self.request.query_params.get("type"),
             category_l1=self.request.query_params.get("category_l1"),
-            category_l2=self.request.query_params.get("category_l2"),
             region_code=self.request.query_params.get("region_code"),
             place_id=_parse_int(self.request.query_params.get("place_id")),
             event_start=_parse_datetime(self.request.query_params.get("event_start")),
             event_end=_parse_datetime(self.request.query_params.get("event_end")),
         )
+        qs = apply_post_search_query(
+            qs, self.request.query_params.get("q")
+        )
+        return _apply_sort(qs, self.request.query_params.get("sort"))
 
     def create(self, request, *args, **kwargs):
         write_serializer = self.get_serializer(data=request.data)
@@ -101,7 +117,7 @@ class PostDetailView(generics.GenericAPIView):
         if post.author_id != request.user.id:
             raise PermissionDenied("只能修改自己的帖子")
         if post.status in ("completed", "closed"):
-            raise ValidationError({"detail": "已完成或已关闭的帖子不可修改"})
+            raise PostConflict("已完成或已关闭的帖子不可修改")
 
         serializer = PostWriteSerializer(
             post, data=request.data, partial=True, context=self.get_serializer_context()
@@ -109,6 +125,15 @@ class PostDetailView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         post = serializer.save()
         return Response(self.get_serializer(post).data)
+
+    def delete(self, request, *args, **kwargs):
+        post = self._get_post(kwargs["pk"])
+        if post.author_id != request.user.id and not request.user.is_staff:
+            raise PermissionDenied("只能删除自己的帖子")
+        if post.status not in ("draft", "closed"):
+            raise PostConflict("仅草稿或已关闭的帖子可以删除")
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PostPublishView(generics.GenericAPIView):
@@ -119,7 +144,7 @@ class PostPublishView(generics.GenericAPIView):
         if post.author_id != request.user.id:
             raise PermissionDenied("只能发布自己的帖子")
         if post.status != "draft":
-            raise ValidationError({"detail": "仅草稿状态可以发布"})
+            raise PostConflict("仅草稿状态可以发布")
 
         post.status = "published"
         post.published_at = timezone.now()
@@ -134,7 +159,11 @@ class PostCloseView(generics.GenericAPIView):
         post = get_object_or_404(Post, pk=kwargs["pk"])
         if post.author_id != request.user.id and not request.user.is_staff:
             raise PermissionDenied("只能关闭自己的帖子")
-        if post.status not in ("closed", "completed"):
-            post.status = "closed"
-            post.save(update_fields=["status", "updated_at"])
+        if post.status == "completed":
+            raise PostConflict("已完成状态的帖子不可关闭")
+        if post.status == "closed":
+            return Response(self.get_serializer(post).data)
+
+        post.status = "closed"
+        post.save(update_fields=["status", "updated_at"])
         return Response(self.get_serializer(post).data)

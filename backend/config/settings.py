@@ -88,6 +88,8 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+# 静态文件收集目录：生产服务器在 .env 里覆盖为绝对路径（如 /var/www/aimback/static）
+STATIC_ROOT = os.environ.get("STATIC_ROOT") or str(BASE_DIR / "staticfiles")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -111,5 +113,36 @@ REST_FRAMEWORK = {
 # posts 模型引用 settings.AUTH_USER_MODEL，迁移会自动跟随切换。
 AUTH_USER_MODEL = "accounts.User"
 
-# CORS：开发期放开所有来源，前端联调用；上线收紧到具体域名。
-CORS_ALLOW_ALL_ORIGINS = True
+# 缓存后端：env 驱动，REDIS_URL 填了走 Redis（生产/联调），空则 locmem（本地开发兜底）。
+# 用途：DRF throttle 计数 / token 缓存 / 短信验证码 / 短信发送频率。
+# ⚠️ locmem 是进程内缓存，跨进程不共享（多 worker 部署时 throttle 会失效）。
+REDIS_URL = os.environ.get("REDIS_URL", "").strip()
+if REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+            "KEY_PREFIX": "aimback",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "aimback-dev",
+        }
+    }
+
+# CORS：env 驱动。开发期默认全放开（前端联调）；生产 .env 设置
+#   CORS_ALLOW_ALL_ORIGINS=false
+#   CORS_ALLOWED_ORIGINS=https://example.com,http://118.25.145.183
+# 来收紧到具体来源（注意：CORS_ALLOW_ALL_ORIGINS=true 时白名单不生效）。
+CORS_ALLOW_ALL_ORIGINS = os.environ.get("CORS_ALLOW_ALL_ORIGINS", "true").lower() == "true"
+CORS_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
+    if o.strip()
+]
