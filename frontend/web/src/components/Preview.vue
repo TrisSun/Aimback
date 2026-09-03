@@ -1,39 +1,26 @@
 <template>
-  <div class="preview" :data-theme="theme">
-    <!-- 顶部工具条 -->
-    <div class="toolbar">
-      <div class="group">
-        <span class="lbl">配色</span>
-        <button class="tbtn" :class="{ on: theme === 'green' }" @click="theme = 'green'">A 青绿 <span class="rec">（推荐）</span></button>
-        <button class="tbtn" :class="{ on: theme === 'blue' }" @click="theme = 'blue'">B 信任蓝</button>
-        <button class="tbtn" :class="{ on: theme === 'orange' }" @click="theme = 'orange'">C 暖橙</button>
-      </div>
-      <div class="group" style="margin-left:auto">
-        <span class="lbl">页面</span>
-        <button class="tbtn" :class="{ on: page === 'home' }" @click="switchPage('home')">首页</button>
-        <button class="tbtn" :class="{ on: page === 'detail' }" @click="switchPage('detail')">详情页</button>
-        <button class="tbtn" :class="{ on: page === 'msg' }" @click="switchPage('msg')">消息</button>
-        <button class="tbtn" :class="{ on: page === 'publish' }" @click="switchPage('publish')">发布页</button>
-      </div>
-    </div>
-
-    <!-- 站点头部 -->
+  <div class="preview" data-theme="green">
+    <!-- 顶部导航栏 -->
     <div class="site-head">
       <div class="inner">
-        <div class="logo"><span class="mark">A</span>Aimback</div>
+        <div class="logo" @click="goHome">Aimback</div>
         <div class="search">
           <input v-model="searchText" placeholder="搜索失物 / 招领信息">
           <button @click="toast('搜索：' + (searchText || '全部'))">搜索</button>
         </div>
+        <button class="btn-pub" @click="handlePublish">发布</button>
         <button class="btn-msg" title="消息" @click="switchPage('msg')">🔔<span class="badge" v-show="unreadCount > 0">{{ unreadCount }}</span></button>
-        <button class="btn-pub" @click="switchPage('publish')">＋ 发布信息</button>
+        <button class="avatar-btn" :title="isLoggedIn ? '个人中心' : '登录'" @click="goUser">
+          <el-avatar :size="34">{{ isLoggedIn ? '我' : '👤' }}</el-avatar>
+        </button>
+        <button v-if="isLoggedIn" class="logout-btn" @click="handleLogout">退出登录</button>
       </div>
     </div>
     <!-- ========== 首页 ========== -->
     <div v-show="page === 'home'">
       <div class="main">
         <aside class="side">
-          <div class="t"><span class="step">2</span>物品分类</div>
+          <div class="t"><span class="step">1</span>物品分类</div>
           <div
             v-for="c in categories"
             :key="c.key"
@@ -43,22 +30,46 @@
           >
             {{ c.label }}
           </div>
+
+          <div class="side-divider"></div>
+
+          <div class="t"><span class="step">2</span>选择校区</div>
+          <div
+            v-for="c in campuses"
+            :key="c.key"
+            class="it"
+            :class="{ on: curCampus === c.key }"
+            @click="curCampus = c.key"
+          >
+            {{ c.name }}
+          </div>
         </aside>
 
         <div class="content">
-          <div class="campus-bar">
-            <div class="cap"><span class="step">1</span>选择校区</div>
-            <div class="campus-row">
-              <div
-                v-for="c in campuses"
-                :key="c.key"
-                class="campus"
-                :class="{ on: curCampus === c.key }"
-                @click="curCampus = c.key"
-              >
-                <div class="cn">{{ c.name }}</div>
-                <div class="cs">{{ c.sub }}</div>
-              </div>
+          <div class="mobile-filter">
+            <div class="mobile-tabs">
+              <div class="mobile-tab" :class="{ on: mobileTab === 'cat' }" @click="mobileTab = 'cat'">物品分类</div>
+              <div class="mobile-tab" :class="{ on: mobileTab === 'campus' }" @click="mobileTab = 'campus'">选择校区</div>
+            </div>
+            <div class="mobile-chips">
+              <template v-if="mobileTab === 'cat'">
+                <span
+                  v-for="c in categories"
+                  :key="c.key"
+                  class="mobile-chip"
+                  :class="{ on: curCat === c.key }"
+                  @click="curCat = c.key"
+                >{{ c.label }}</span>
+              </template>
+              <template v-else>
+                <span
+                  v-for="c in campuses"
+                  :key="c.key"
+                  class="mobile-chip"
+                  :class="{ on: curCampus === c.key }"
+                  @click="curCampus = c.key"
+                >{{ c.name }}</span>
+              </template>
             </div>
           </div>
 
@@ -83,7 +94,7 @@
                 <div class="meta">🕒 {{ it.time }}</div>
                 <div class="foot">
                   <span class="tag" :class="tagMap[it.status].cls"><i class="dot"></i>{{ tagMap[it.status].txt }}</span>
-                  <span class="cat">{{ it.cat }}{{ it.reward ? ' · 🏆¥' + netOf(it.reward) : '' }}</span>
+                  <span class="cat">{{ it.cat }}</span>
                 </div>
               </div>
             </div>
@@ -159,14 +170,6 @@
               </div>
 
               <div class="safety">🛡 认领需通过验证问答，通过后才会交换联系方式</div>
-
-              <div v-if="currentDetail.reward" class="reward-banner">
-                <div class="rm">¥{{ netOf(currentDetail.reward) }}</div>
-                <div>
-                  <div class="rt">拾获者可得赏金（已扣手续费）</div>
-                  <div class="rd">失主悬赏 ¥{{ currentDetail.reward }}，已自动扣除 ¥{{ feeOf(currentDetail.reward) }} 平台手续费（10%）</div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -222,13 +225,13 @@
       </div>
     </div>
 
-    <!-- ========== 发布页（赏金设置） ========== -->
+    <!-- ========== 发布页 ========== -->
     <div v-show="page === 'publish'">
       <div class="main" style="flex-direction:column">
         <div class="back" @click="switchPage('home')">← 返回首页</div>
         <div class="pub-card">
           <h2>发布失物信息</h2>
-          <div class="sub">填写物品信息并设置悬赏，拾获者归还后你可发放赏金</div>
+          <div class="sub">填写物品信息，AI 会帮你生成验证问题并自动匹配</div>
 
           <div class="field">
             <label>信息类型</label>
@@ -282,18 +285,6 @@
               </template>
               <div v-else class="q-empty">填写详细描述后，点击「用 AI 生成」自动生成问题</div>
             </div>
-          </div>
-
-          <div v-show="publishType === 'lost'" class="field">
-            <label>设置悬赏（系统自动扣除手续费后对外展示）</label>
-            <input v-model="rewardInput" type="text" inputmode="numeric" placeholder="0 表示不设赏金">
-            <div v-if="rewardValue > 0" class="fee-box">
-              <div class="fee-row"><span>你设置的悬赏总额</span><span>¥{{ rewardValue }}</span></div>
-              <div class="fee-row"><span>平台手续费（{{ FEE_RATE * 100 }}%，自动扣除）</span><span class="hl">- ¥{{ feeOf(rewardValue) }}</span></div>
-              <div class="fee-row total"><span>对外展示的赏金</span><span class="hl2">¥{{ netOf(rewardValue) }}</span></div>
-              <div class="fee-note">系统自动扣除手续费后，对外展示的赏金为 <b>¥{{ netOf(rewardValue) }}</b>，拾获者归还并通过验证后即可领取。</div>
-            </div>
-            <div v-else class="fee-box"><div class="fee-note">未设置赏金，拾获者归还后无需发放赏金。</div></div>
           </div>
 
           <button class="btn btn-main" style="width:100%;margin-top:8px" @click="toast('（预览）已发布，AI 开始自动匹配')">发布信息</button>
@@ -411,6 +402,10 @@
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { getPosts, getPostDetail } from '@/api/posts'
 import type { Post } from '@/api/posts'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoggedIn = ref(!!localStorage.getItem('token'))
 
 type Status = 'find' | 'claim' | 'done'
 type ChatKey = 'wang' | 'applied'
@@ -431,7 +426,6 @@ interface Item {
   pub: string
   campusName: string
   desc: string
-  reward?: number
 }
 
 interface Msg {
@@ -463,9 +457,6 @@ interface Convo {
   msgs: ChatMsg[]
 }
 
-// 赏金：失主发布时设置，平台收取 10% 手续费，对外展示 = 扣除手续费后的实得金额
-const FEE_RATE = 0.1
-
 const campuses = [
   { key: 'jjl', name: '将军路校区', sub: '南京 · 江宁' },
   { key: 'tmh', name: '天目湖校区', sub: '常州 · 溧阳' },
@@ -494,13 +485,13 @@ const items = ref<Item[]>([
   {
     icon: '🎒', name: '黑色双肩背包（含电脑）', loc: '图书馆三楼自习区', time: '2026-08-20',
     cat: '包袋', catKey: 'bags', status: 'find', campus: 'jjl',
-    owner: '林', ownerName: '林同学', pub: '2026-08-21', campusName: '将军路校区', reward: 50,
+    owner: '林', ownerName: '林同学', pub: '2026-08-21', campusName: '将军路校区',
     desc: '8月20日下午在图书馆三楼自习区丢失一个黑色双肩背包，内有一台银色笔记本电脑（带蓝色贴纸）、若干书本和一副耳机。\n包外侧有一处轻微磨损，拉链头是金属圆环。如有拾到，请及时联系我，万分感谢！',
   },
   {
     icon: '🎧', name: 'AirPods 无线耳机', loc: '操场跑道', time: '2026-08-18',
     cat: '电子设备', catKey: 'electronics', status: 'find', campus: 'jjl',
-    owner: '陈', ownerName: '陈同学', pub: '2026-08-19', campusName: '将军路校区', reward: 30,
+    owner: '陈', ownerName: '陈同学', pub: '2026-08-19', campusName: '将军路校区',
     desc: '跑步时从口袋滑落，白色 AirPods 二代，充电盒背面有一道划痕。',
   },
   {
@@ -518,7 +509,7 @@ const items = ref<Item[]>([
   {
     icon: '🔑', name: '钥匙串（3 把钥匙）', loc: '体育馆更衣室', time: '2026-08-16',
     cat: '钥匙门禁', catKey: 'keys', status: 'find', campus: 'mgg',
-    owner: '吴', ownerName: '吴同学', pub: '2026-08-16', campusName: '明故宫校区', reward: 20,
+    owner: '吴', ownerName: '吴同学', pub: '2026-08-16', campusName: '明故宫校区',
     desc: '体育馆更衣室捡到一串钥匙，共 3 把，挂着一个蓝色门禁卡套。',
   },
 ])
@@ -553,11 +544,11 @@ const convos: Record<ChatKey, Convo> = {
   },
 }
 // ===== 响应式状态 =====
-const theme = ref('green')
 const page = ref<'home' | 'detail' | 'msg' | 'publish'>('home')
 const curCampus = ref('jjl')
 const curCat = ref('all')
 const chip = ref(0)
+const mobileTab = ref<'cat' | 'campus'>('cat')
 const searchText = ref('')
 
 const currentDetail = ref<Item | null>(null)
@@ -574,7 +565,6 @@ const answer2 = ref('')
 
 const publishType = ref<'lost' | 'found'>('lost')
 const descInput = ref('')
-const rewardInput = ref('50')
 const aiQuestions = ref<string[]>([])
 const aiLoading = ref(false)
 
@@ -598,14 +588,6 @@ const filteredItems = computed(() =>
 
 const unreadCount = computed(() => msgs.value.filter((m) => m.unread).length)
 
-const rewardValue = computed(() => {
-  const raw = rewardInput.value.replace(/\D/g, '')
-  return parseInt(raw || '0', 10)
-})
-
-const feeOf = (v?: number) => (v ? Math.round(v * FEE_RATE) : 0)
-const netOf = (v?: number) => (v ? v - feeOf(v) : 0)
-
 const claimBtnText = computed(() => {
   const s = currentDetail.value?.status
   return s === 'done' ? '已完成交接' : s === 'claim' ? '⏳ 认领中，等待确认' : '🔒 我要认领'
@@ -624,6 +606,43 @@ function toast(msg: string) {
 function switchPage(p: 'home' | 'detail' | 'msg' | 'publish') {
   page.value = p
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 点击 logo 返回首页
+function goHome() {
+  switchPage('home')
+  if (router.currentRoute.value.path !== '/') {
+    router.push('/')
+  }
+}
+
+// 发布入口：需登录，未登录跳登录页
+function handlePublish() {
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  switchPage('publish')
+}
+
+// 右上角头像：未登录跳登录页，已登录进个人中心
+function goUser() {
+  if (isLoggedIn.value) {
+    router.push('/profile')
+  } else {
+    router.push('/login')
+  }
+}
+
+// 退出登录：清除 token 并回到首页
+function handleLogout() {
+  localStorage.removeItem('token')
+  isLoggedIn.value = false
+  toast('已退出登录')
+  switchPage('home')
+  if (router.currentRoute.value.path !== '/') {
+    router.push('/')
+  }
 }
 
 // ===== 旧页面接口逻辑迁移：后端 Post -> 预览 Item 字段映射 =====
@@ -720,7 +739,13 @@ function pickThumb(i: number, icon: string) {
 }
 
 function openClaimModal() {
-  if (currentDetail.value?.status !== 'done') maskShow.value = true
+  if (currentDetail.value?.status === 'done') return
+  // 认领需要登录，未登录跳登录页
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  maskShow.value = true
 }
 
 function closeModal() {
@@ -824,7 +849,6 @@ function sendChat() {
 
 function setPublishType(t: 'lost' | 'found') {
   publishType.value = t
-  if (t === 'found') rewardInput.value = ''
 }
 
 function aiGenQuestions() {
@@ -880,52 +904,12 @@ function delQuestion(i: number) {
   --done:#1677FF;
   --done-bg:#E8F3FF;
 }
-/* 方案B 信任蓝 */
-.preview[data-theme="blue"]{
-  --brand:#1677FF;
-  --brand-dark:#0E5FD8;
-  --brand-light:#E8F3FF;
-  --brand-text:#FFFFFF;
-  --done:#00B42A;
-  --done-bg:#E8FFEA;
-}
-/* 方案C 暖橙 */
-.preview[data-theme="orange"]{
-  --brand:#FF6B35;
-  --brand-dark:#E85A28;
-  --brand-light:#FFF3EC;
-  --brand-text:#FFFFFF;
-  --done:#00B42A;
-  --done-bg:#E8FFEA;
-}
-
 .preview *{margin:0;padding:0;box-sizing:border-box;}
 
-/* 顶部工具条 */
-.toolbar{
-  background:#fff;border-bottom:1px solid var(--border);
-  padding:12px 20px;display:flex;align-items:center;gap:20px;
-  flex-wrap:wrap;position:sticky;top:0;z-index:50;
-}
-.toolbar .group{display:flex;align-items:center;gap:8px;}
-.toolbar .lbl{font-size:12px;color:var(--text-3);}
-.tbtn{
-  height:30px;padding:0 14px;border-radius:6px;border:1px solid var(--border);
-  background:#fff;font-size:13px;color:var(--text-2);cursor:pointer;transition:all .2s;
-}
-.tbtn:hover{border-color:var(--brand);color:var(--brand);}
-.tbtn.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:500;}
-.tbtn .rec{font-size:11px;opacity:.85;}
-
-/* 站点头部 */
-.site-head{background:#fff;padding:18px 0;border-bottom:1px solid var(--border-light);}
+/* 站点头部（固定顶部导航栏） */
+.site-head{position:sticky;top:0;z-index:50;background:#fff;padding:12px 0;border-bottom:1px solid var(--border-light);}
 .site-head .inner{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:20px;}
-.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;flex-shrink:0;}
-.logo .mark{
-  width:34px;height:34px;border-radius:9px;background:var(--brand);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;
-  transition:background .2s;
-}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:600;flex-shrink:0;cursor:pointer;}
 .search{flex:1;display:flex;max-width:440px;}
 .search input{
   flex:1;height:40px;padding:0 14px;border:1px solid var(--border);border-right:none;
@@ -952,6 +936,15 @@ function delQuestion(i: number) {
   background:#F53F3F;color:#fff;border-radius:9px;font-size:11px;line-height:17px;
   text-align:center;font-weight:600;border:2px solid #fff;
 }
+.avatar-btn{
+  height:40px;width:40px;border:none;background:transparent;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;
+}
+.logout-btn{
+  height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--border);
+  background:#fff;font-size:13px;color:var(--text-2);cursor:pointer;transition:all .2s;
+}
+.logout-btn:hover{border-color:var(--brand);color:var(--brand);}
 /* 主体布局 */
 .main{max-width:1080px;margin:20px auto 0;padding:0 20px;display:flex;gap:20px;}
 .side{
@@ -975,27 +968,13 @@ function delQuestion(i: number) {
 
 .content{flex:1;min-width:0;}
 
-/* 校区选择 */
-.campus-bar{
-  background:#fff;border-radius:var(--radius);padding:14px;margin-bottom:14px;box-shadow:var(--shadow);
+/* 移动端筛选标签页（默认隐藏，小屏显示） */
+.mobile-filter{display:none;}
+
+/* 侧边栏分区之间的分隔线 */
+.side-divider{
+  height:1px;background:var(--border-light);margin:14px 4px;
 }
-.campus-bar .cap{
-  font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;
-}
-.campus-bar .cap .step{
-  width:17px;height:17px;border-radius:50%;background:var(--brand);color:#fff;
-  font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.campus-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.campus{
-  padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;
-  cursor:pointer;transition:all .2s;background:#fff;
-}
-.campus:hover{border-color:var(--brand);}
-.campus.on{border-color:var(--brand);background:var(--brand-light);}
-.campus .cn{font-size:14px;font-weight:600;margin-bottom:2px;}
-.campus.on .cn{color:var(--brand);}
-.campus .cs{font-size:12px;color:var(--text-3);}
 
 .filter-bar{
   background:#fff;border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;
@@ -1176,16 +1155,7 @@ function delQuestion(i: number) {
 }
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
-/* 赏金横幅（详情页） */
-.reward-banner{
-  display:flex;align-items:center;gap:14px;margin-top:14px;
-  background:linear-gradient(135deg,#FFF7E8,#FFEFC7);
-  border:1px solid #FFD591;border-radius:12px;padding:12px 16px;
-}
-.reward-banner .rm{font-size:28px;font-weight:700;color:#D4380D;line-height:1;}
-.reward-banner .rt{font-size:13px;color:#874D00;font-weight:500;margin-bottom:3px;}
-.reward-banner .rd{font-size:12px;color:#874D00;}
-/* 发布页（赏金设置） */
+/* 发布页 */
 .pub{padding:20px 0;}
 .pub-card{background:#fff;border-radius:16px;padding:24px;box-shadow:var(--shadow);max-width:640px;margin:0 auto;}
 .pub-card h2{font-size:18px;font-weight:600;margin-bottom:4px;}
@@ -1205,13 +1175,6 @@ function delQuestion(i: number) {
   text-align:center;cursor:pointer;font-size:13px;transition:all .2s;
 }
 .radio-row .r.on{border-color:var(--brand);background:var(--brand-light);color:var(--brand);font-weight:500;}
-.fee-box{background:#FAFBFC;border:1px dashed var(--border);border-radius:10px;padding:14px 16px;margin-top:8px;}
-.fee-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--text-2);}
-.fee-row.total{border-top:1px solid var(--border);margin-top:6px;padding-top:10px;font-weight:600;color:var(--text-1);}
-.fee-row .hl{color:#D4380D;font-weight:600;}
-.fee-note{font-size:12px;color:var(--text-3);margin-top:8px;line-height:1.6;}
-.fee-note b{color:#D4380D;}
-.fee-row.total .hl2{color:var(--brand);font-weight:700;}
 
 /* AI 智能匹配置顶消息 */
 .pinned{
@@ -1284,4 +1247,118 @@ function delQuestion(i: number) {
 .chat-input input:disabled{background:#F2F3F5;cursor:not-allowed;}
 .chat-input button{height:40px;padding:0 20px;border:none;border-radius:20px;background:var(--brand);color:#fff;font-size:14px;cursor:pointer;}
 .chat-input button:disabled{background:var(--border);color:var(--text-3);cursor:not-allowed;}
+/* ===== 手机端适配（屏幕 < 768px） ===== */
+@media (max-width: 767px) {
+  .preview{font-size:16px;padding:0 0 32px;}
+
+  /* 站点头部：上下排列 */
+  .site-head{padding:10px 0;}
+  .site-head .inner{flex-wrap:wrap;gap:10px;padding:0 12px;}
+  .logo{font-size:18px;gap:8px;}
+  .search{flex:1 1 100%;max-width:none;order:5;}
+  .search input{height:44px;font-size:16px;}
+  .search button{height:44px;padding:0 16px;font-size:16px;}
+  .btn-pub{height:44px;padding:0 16px;font-size:16px;}
+  .btn-msg{height:44px;width:44px;font-size:18px;}
+  .avatar-btn{height:44px;width:44px;}
+  .logout-btn{height:44px;padding:0 14px;font-size:14px;}
+
+  /* 主布局：单列 + 隐藏侧边栏 */
+  .main{flex-direction:column;gap:12px;margin-top:12px;padding:0 12px;}
+  .side{display:none;}
+  .content{width:100%;}
+
+  /* 移动端筛选标签页 */
+  .mobile-filter{display:block;margin-bottom:12px;background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;}
+  .mobile-tabs{display:flex;gap:8px;margin-bottom:10px;}
+  .mobile-tab{
+    flex:1;height:38px;border-radius:8px;border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+    color:var(--text-2);cursor:pointer;transition:all .2s;
+  }
+  .mobile-tab.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:500;}
+  .mobile-chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .mobile-chip{
+    padding:7px 14px;border-radius:16px;background:var(--border-light);
+    color:var(--text-2);font-size:14px;cursor:pointer;transition:all .2s;
+  }
+  .mobile-chip.on{background:var(--brand);color:#fff;}
+
+  /* 筛选条 */
+  .filter-bar{flex-wrap:wrap;padding:10px 12px;gap:8px;}
+  .chip{padding:8px 16px;font-size:15px;}
+  .count{width:100%;margin-left:0;font-size:13px;}
+
+  /* 卡片列表：手机端固定 2 列 */
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .card .img{height:100px;font-size:32px;}
+  .card .body{padding:8px;}
+  .card .name{font-size:13px;margin-bottom:4px;}
+  .card .meta{display:none;}
+  .card .foot{margin-top:6px;}
+  .tag{font-size:11px;padding:2px 6px;}
+  .cat{font-size:11px;}
+
+  /* 详情页：左右 → 上下 */
+  .detail{flex-direction:column;gap:16px;padding:16px;}
+  .gallery{flex:none;width:100%;}
+  .big-img{height:auto;aspect-ratio:1/1;font-size:72px;}
+  .thumb{width:64px;height:64px;font-size:22px;}
+  .info h1{font-size:20px;}
+  .mrow{font-size:15px;}
+  .owner{font-size:14px;}
+  .acts{flex-direction:column;}
+  .btn{height:48px;font-size:16px;}
+  .safety{font-size:13px;}
+  .desc{padding:16px;margin-top:12px;}
+  .desc h2{font-size:16px;}
+  .desc p{font-size:15px;}
+  .back{font-size:14px;}
+
+  /* 消息页 */
+  .msg-wrap{border-radius:12px;}
+  .msg-head{padding:14px 16px;}
+  .msg-head h2{font-size:16px;}
+  .msg-tabs{padding:10px 16px;}
+  .msg-tabs .mt{font-size:14px;padding:7px 14px;}
+  .msg-item{padding:14px 16px;}
+  .msg-ico{width:40px;height:40px;font-size:18px;}
+  .msg-title{font-size:15px;}
+  .msg-time{font-size:12px;}
+  .msg-sub{font-size:14px;}
+
+  /* 弹窗 */
+  .modal .head{font-size:16px;}
+  .tip{font-size:14px;}
+  .qa .q{font-size:15px;}
+  .qa input{height:44px;font-size:16px;}
+  .modal .foot .btn{height:44px;font-size:15px;flex:1;}
+  .review-item .rq{font-size:14px;}
+  .review-item .ra{font-size:15px;}
+
+  /* 发布页 */
+  .pub-card{padding:16px;}
+  .pub-card h2{font-size:17px;}
+  .pub-card .sub{font-size:14px;}
+  .field label{font-size:15px;}
+  .field input[type=text],.field textarea,.field select{font-size:16px;padding:12px;}
+  .radio-row{flex-direction:column;}
+  .radio-row .r{padding:14px;font-size:15px;}
+
+  /* AI 生成问题 */
+  .ai-sec .ah .ab{height:40px;font-size:15px;padding:0 14px;}
+  .ai-sec .ad{font-size:13px;}
+  .q-item{font-size:14px;}
+
+  /* 聊天抽屉：接近全屏 */
+  .chat{max-width:none;height:92vh;border-radius:0;}
+  .chat-head .nm{font-size:16px;}
+  .verify-block .vh{font-size:14px;}
+  .vq{font-size:14px;}
+  .vq input{height:40px;font-size:15px;}
+  .verify-block .vbtn{height:44px;font-size:15px;}
+  .bubble{font-size:15px;max-width:82%;}
+  .chat-input input{height:44px;font-size:16px;}
+  .chat-input button{height:44px;font-size:15px;}
+}
 </style>

@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 统一封装的 axios 实例，所有接口共用
 const request = axios.create({
-  baseURL: '/api/v1',
+  baseURL: 'http://118.25.145.183/api/v1/',
   timeout: 10000,
 })
 
@@ -32,7 +32,7 @@ request.interceptors.response.use(
       if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
-    } else if (status === 400 || status === 403 || status === 409) {
+    } else if (status === 400 || status === 403 || status === 404 || status === 409 || status === 429 || status === 502) {
       ElMessage.error(extractErrorMessage(error))
     }
 

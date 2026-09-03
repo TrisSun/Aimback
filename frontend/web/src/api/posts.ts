@@ -95,3 +95,27 @@ export function getPostDetail(id: number | string) {
 export function createPost(data: CreatePostData) {
   return request.post<Post, Post>('/posts', data)
 }
+
+// ===== 图片上传预签名凭证（后端 storage PresignUploadView，需登录） =====
+
+export interface UploadTicket {
+  bucket: string
+  region: string
+  cos_key: string
+  thumb_key: string
+  upload_url: string
+  method: string
+  headers: Record<string, string>
+  expires_in: number
+}
+
+export interface PresignResult {
+  count: number
+  tickets: UploadTicket[]
+  expires_in: number
+}
+
+// POST /upload/presign/ 获取图片上传预签名地址（默认一张 image/jpeg）
+export function getUploadPresign(count = 1, content_type = 'image/jpeg') {
+  return request.post<PresignResult, PresignResult>('/upload/presign/', { count, content_type })
+}
