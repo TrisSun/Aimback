@@ -5,7 +5,7 @@ from . import views
 app_name = 'claims'
 
 urlpatterns = [
-    path('posts/<int:pk>/claim-questions', views.ClaimQuestionListView.as_view(), name='claim-questions'),
+    path('posts/<int:pk>/claim-questions', views.ClaimQuestionView.as_view(), name='claim-questions'),
     path('posts/<int:pk>/claim', views.ClaimCreateView.as_view(), name='claim-create'),
     path('posts/<int:pk>/claims', views.PostClaimListView.as_view(), name='post-claims'),
     path('my-claims', views.MyClaimListView.as_view(), name='my-claims'),

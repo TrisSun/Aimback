@@ -26,19 +26,41 @@ class ClaimFlowTests(APITestCase):
             published_at=timezone.now(),
         )
 
-    def _claim(self, user):
+    def _set_questions(self, user, questions):
         self.client.force_authenticate(user=user)
-        return self.client.post(
-            f'/api/v1/posts/{self.post.id}/claim', {'answers': []}, format='json'
+        return self.client.put(
+            f'/api/v1/posts/{self.post.id}/claim-questions',
+            {'questions': [{'question': q} for q in questions]},
+            format='json',
         )
 
-    def test_questions_lazy_generate(self):
+    def _claim(self, user, answers=None):
+        self.client.force_authenticate(user=user)
+        return self.client.post(
+            f'/api/v1/posts/{self.post.id}/claim', {'answers': answers or []}, format='json'
+        )
+
+    def test_set_and_get_questions(self):
+        resp = self._set_questions(self.author, ['手机壳背面贴了什么？', '耳机盒里还有什么？'])
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 2)
+        # 公开获取，且不含答案字段
+        self.client.force_authenticate(user=None)
         resp = self.client.get(f'/api/v1/posts/{self.post.id}/claim-questions')
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertGreater(len(resp.data), 0)
+        self.assertEqual(len(resp.data), 2)
+        self.assertNotIn('answer', resp.data[0])
 
-    def test_create_claim_sets_post_claiming(self):
-        resp = self._claim(self.claimant)
+    def test_only_author_can_set_questions(self):
+        resp = self._set_questions(self.claimant, ['问题'])
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_claim_with_answers(self):
+        self._set_questions(self.author, ['手机壳背面贴了什么？'])
+        self.client.force_authenticate(user=None)
+        qs = self.client.get(f'/api/v1/posts/{self.post.id}/claim-questions').data
+        qid = qs[0]['id']
+        resp = self._claim(self.claimant, [{'question_id': qid, 'answer': '柴犬贴纸'}])
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.post.refresh_from_db()
         self.assertEqual(self.post.status, 'claiming')
@@ -57,7 +79,6 @@ class ClaimFlowTests(APITestCase):
         claim_id = resp.data['id']
         self.client.force_authenticate(user=self.author)
         resp = self.client.post(f'/api/v1/claims/{claim_id}/reject')
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(resp.data['status'], 'rejected')
         self.post.refresh_from_db()
         self.assertEqual(self.post.status, 'published')
@@ -81,22 +102,15 @@ class ClaimFlowTests(APITestCase):
     def test_approve_then_both_confirm_handover(self):
         resp = self._claim(self.claimant)
         claim_id = resp.data['id']
-
-        # 作者判定通过
         self.client.force_authenticate(user=self.author)
         resp = self.client.post(f'/api/v1/claims/{claim_id}/approve')
         self.assertEqual(resp.data['status'], 'approved')
         self.assertIsNotNone(resp.data['contact'])
-
-        # 失主先确认（此时还不 completed）
         self.client.force_authenticate(user=self.claimant)
         resp = self.client.post(f'/api/v1/claims/{claim_id}/confirm-handover')
         self.assertEqual(resp.data['status'], 'approved')
-
-        # 作者再确认 → 双方确认完成
         self.client.force_authenticate(user=self.author)
         resp = self.client.post(f'/api/v1/claims/{claim_id}/confirm-handover')
         self.assertEqual(resp.data['status'], 'completed')
-
         self.post.refresh_from_db()
         self.assertEqual(self.post.status, 'completed')

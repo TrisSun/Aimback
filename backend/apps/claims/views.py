@@ -10,7 +10,6 @@ from apps.posts.models import Post
 from . import constants
 from .models import Claim, ClaimAnswer, ClaimQuestion
 from .serializers import ClaimDetailSerializer, ClaimPublicSerializer
-from .services import generate_claim_questions
 
 
 class ClaimConflict(APIException):
@@ -33,18 +32,46 @@ def _set_post_status(post, new_status):
     post.save(update_fields=['status', 'updated_at'])
 
 
-class ClaimQuestionListView(APIView):
-    permission_classes = [permissions.AllowAny]
+class ClaimQuestionView(APIView):
+    '''隐藏问题：GET 公开获取；PUT 拾取者本人设置（整量替换，不存答案）。'''
 
     def get(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
-        questions = list(post.claim_questions.all())
-        if not questions:
-            generated = generate_claim_questions(post)
-            questions = [
-                ClaimQuestion.objects.create(post=post, question=q, sort_order=i)
-                for i, q in enumerate(generated)
-            ]
+        questions = post.claim_questions.all()
+        data = [
+            {'id': q.id, 'question': q.question, 'sort_order': q.sort_order}
+            for q in questions
+        ]
+        return Response(data)
+
+    def put(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        if request.user.id != post.author_id:
+            raise PermissionDenied('只能设置自己帖子的问题')
+        if post.status not in ('draft', 'published'):
+            raise ClaimConflict('当前状态不可设置问题')
+
+        questions_data = request.data.get('questions') or []
+        if not isinstance(questions_data, list):
+            raise ValidationError({'questions': 'questions 必须是数组'})
+        if len(questions_data) > 5:
+            raise ValidationError({'questions': '最多设置 5 个问题'})
+
+        cleaned = []
+        for item in questions_data:
+            if not isinstance(item, dict):
+                raise ValidationError({'questions': '每项必须是对象'})
+            q = (item.get('question') or '').strip()
+            if not q:
+                raise ValidationError({'questions': '问题不能为空'})
+            cleaned.append(q)
+
+        post.claim_questions.all().delete()
+        ClaimQuestion.objects.bulk_create([
+            ClaimQuestion(post=post, question=q, sort_order=i)
+            for i, q in enumerate(cleaned)
+        ])
+        questions = post.claim_questions.all()
         data = [
             {'id': q.id, 'question': q.question, 'sort_order': q.sort_order}
             for q in questions
