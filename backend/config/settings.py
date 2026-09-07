@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "apps.posts.apps.PostsConfig",
     "apps.accounts.apps.AccountsConfig",
     "apps.storage.apps.StorageConfig",
+    "apps.claims.apps.ClaimsConfig",
 ]
 
 MIDDLEWARE = [
