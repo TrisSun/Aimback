@@ -226,13 +226,9 @@ class PostWriteSerializer(serializers.ModelSerializer):
     @staticmethod
     def _replace_images(post: Post, images: list[dict]) -> None:
         post.images.all().delete()
-        PostImage.objects.bulk_create(
-            [
-                PostImage(
-                    post=post,
-                    cos_key=item["cos_key"],
-                    sort_order=item.get("sort_order", 0),
-                )
-                for item in images
-            ]
-        )
+        for item in images:
+            PostImage.objects.create(
+                post=post,
+                cos_key=item["cos_key"],
+                sort_order=item.get("sort_order", 0),
+            )

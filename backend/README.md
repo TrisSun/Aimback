@@ -18,13 +18,22 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-管理后台：`/admin/`。帖子接口基地址：`/api/v1/posts`。
+管理后台：`/admin/`。帖子接口基地址：`/api/v1/posts`。匹配搜寻：`POST /api/v1/matches/search`。
 
 ## 测试
 
 ```bash
-python manage.py test apps.posts
+python manage.py test apps.posts apps.ai
 ```
+
+向量化后台任务（有 `DASHSCOPE_API_KEY` 时把 pending 写成 ready）：
+
+```bash
+python manage.py process_embeddings --once
+# 或循环：python manage.py process_embeddings --loop --interval 5
+```
+
+无 Key 时搜寻会退化为硬过滤 + 关键词，不调百炼。
 
 ## 目录归属
 
