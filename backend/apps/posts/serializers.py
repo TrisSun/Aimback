@@ -1,8 +1,13 @@
 from rest_framework import serializers
 from django.utils import timezone
 
+from apps.storage.cos_presign import presign_original_get, thumb_url_for
+
 from . import constants
 from .models import Place, Post, PostAttribute, PostImage, Region
+
+# 详情 / 发布 / 关闭返回原图签名 URL；列表、匹配候选等默认缩略图。
+_ORIGINAL_IMAGE_URL_NAMES = {"post-detail", "post-publish", "post-close"}
 
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -25,9 +30,28 @@ class PostImagePublicSerializer(serializers.ModelSerializer):
         fields = ["id", "sort_order", "review_status", "url"]
 
     def get_url(self, obj: PostImage) -> str | None:
-        # 图片访问链接统一由 B 的 COS 签名凭证服务生成，A 不在帖子接口内拼接路径。
-        # 联调接入 B 的服务后替换此占位实现。
-        return None
+        key = (obj.cos_key or "").strip()
+        if not key:
+            return None
+        size = self._image_size()
+        try:
+            if size == "original":
+                return presign_original_get(key)
+            return thumb_url_for(key)
+        except Exception:
+            # 本地未配 COS 或签发失败时不拖垮帖子接口。
+            return None
+
+    def _image_size(self) -> str:
+        size = self.context.get("image_size")
+        if size in {"thumb", "original"}:
+            return size
+        request = self.context.get("request")
+        match = getattr(request, "resolver_match", None) if request is not None else None
+        url_name = getattr(match, "url_name", "") or ""
+        if url_name in _ORIGINAL_IMAGE_URL_NAMES:
+            return "original"
+        return "thumb"
 
 
 class PostAttributeSerializer(serializers.ModelSerializer):

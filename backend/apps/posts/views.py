@@ -6,8 +6,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .filters import apply_post_hard_filters, apply_post_search_query
-from .models import Post
-from .serializers import PostPublicSerializer, PostWriteSerializer
+from .models import Place, Post, Region
+from .serializers import (
+    PlacePublicSerializer,
+    PostPublicSerializer,
+    PostWriteSerializer,
+    RegionSerializer,
+)
 
 
 class PostConflict(APIException):
@@ -167,3 +172,43 @@ class PostCloseView(generics.GenericAPIView):
         post.status = "closed"
         post.save(update_fields=["status", "updated_at"])
         return Response(self.get_serializer(post).data)
+
+
+class RegionListView(generics.ListAPIView):
+    serializer_class = RegionSerializer
+    pagination_class = None
+    permission_classes = []
+
+    def get_queryset(self):
+        return Region.objects.all()
+
+
+class PlaceListView(generics.ListAPIView):
+    serializer_class = PlacePublicSerializer
+    pagination_class = None
+    permission_classes = []
+
+    def get_queryset(self):
+        qs = Place.objects.filter(is_active=True).select_related("region")
+        region_code = self.request.query_params.get("region_code")
+        if region_code:
+            qs = qs.filter(region__code=region_code)
+        return qs
+
+
+class MyPostListView(generics.ListAPIView):
+    serializer_class = PostPublicSerializer
+    pagination_class = PostPagination
+
+    def get_permissions(self):
+        from rest_framework.permissions import IsAuthenticated
+
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        return (
+            Post.objects.filter(author=self.request.user)
+            .select_related("found_region", "found_place", "attribute")
+            .prefetch_related("images")
+            .order_by("-created_at", "-id")
+        )

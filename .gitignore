@@ -38,6 +38,15 @@ pnpm-debug.log*
 unpackage/
 .hbuilderx/
 
+# ---------- 本机 Cursor / agent skills（不入库） ----------
+.agents/
+.cursor/
+skills-lock.json
+
+# ---------- 文档转换中间产物 ----------
+docs/*.conversion_profile.json
+docs/*_files/
+
 # ---------- 编辑器与系统 ----------
 .vscode/*
 !.vscode/extensions.json

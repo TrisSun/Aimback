@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -6,7 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from .filters import apply_post_hard_filters, apply_post_search_query
-from .models import Place, Post, PostAttribute, Region
+from .models import Place, Post, PostAttribute, PostImage, Region
 from .serializers import PostAttributeSerializer, PostPublicSerializer
 
 User = get_user_model()
@@ -343,3 +344,66 @@ class PostApiTestCase(TestCase):
         resp = self.client.get("/api/v1/posts", {"category_l2": "phone"})
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.data["count"], 2)
+
+    def test_regions_places_and_my_posts(self):
+        self.client.force_authenticate(self.user)
+        region_resp = self.client.get("/api/v1/regions")
+        self.assertEqual(region_resp.status_code, 200)
+        self.assertEqual(region_resp.data[0]["code"], "440305")
+
+        place_resp = self.client.get("/api/v1/places", {"region_code": "440305"})
+        self.assertEqual(place_resp.status_code, 200)
+        self.assertEqual(place_resp.data[0]["id"], self.place.id)
+
+        draft = self._create_post(status="draft")
+        mine = self.client.get("/api/v1/my-posts")
+        self.assertEqual(mine.status_code, 200)
+        ids = [item["id"] for item in mine.data["results"]]
+        self.assertIn(draft.id, ids)
+
+        self.client.force_authenticate(self.other)
+        other_mine = self.client.get("/api/v1/my-posts")
+        self.assertEqual(other_mine.data["count"], 0)
+
+    @patch(
+        "apps.posts.serializers.thumb_url_for",
+        return_value="https://thumb.example/posts/a_thumb.jpg",
+    )
+    @patch(
+        "apps.posts.serializers.presign_original_get",
+        return_value="https://orig.example/posts/a.jpg?sign=1",
+    )
+    def test_list_uses_thumb_url_and_detail_uses_original(
+        self, _mock_original, _mock_thumb
+    ):
+        post = self._create_post()
+        PostImage.objects.create(
+            post=post,
+            cos_key="posts/2026/08/" + ("a" * 32) + ".jpg",
+            sort_order=0,
+        )
+        self.client.force_authenticate(self.user)
+
+        list_resp = self.client.get("/api/v1/posts")
+        self.assertEqual(list_resp.status_code, 200)
+        self.assertEqual(
+            list_resp.data["results"][0]["images"][0]["url"],
+            "https://thumb.example/posts/a_thumb.jpg",
+        )
+
+        detail_resp = self.client.get(f"/api/v1/posts/{post.id}")
+        self.assertEqual(detail_resp.status_code, 200)
+        self.assertEqual(
+            detail_resp.data["images"][0]["url"],
+            "https://orig.example/posts/a.jpg?sign=1",
+        )
+
+    @patch(
+        "apps.posts.serializers.thumb_url_for",
+        side_effect=KeyError("COS_BUCKET_THUMB"),
+    )
+    def test_image_url_is_null_when_cos_unavailable(self, _mock_thumb):
+        post = self._create_post()
+        PostImage.objects.create(post=post, cos_key="posts/uuid.jpg", sort_order=0)
+        data = PostPublicSerializer(post).data
+        self.assertIsNone(data["images"][0]["url"])
