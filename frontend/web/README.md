@@ -1,42 +1,31 @@
-# web
+# Aimback Web
 
-This template should help get you started developing with Vue 3 in Vite.
+Vue 3 + TypeScript + Vite 前端，对接 `/api/v1`。
 
-## Recommended IDE Setup
+## 本地开发
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+先启动 Django（默认 `http://127.0.0.1:8000`），再：
 
 ```sh
 npm install
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+Vite 会把 `/api` 代理到后端。也可用 `.env` 覆盖：
 
-```sh
-npm run build
 ```
+VITE_API_BASE=/api/v1
+```
+
+## 页面
+
+| 路径 | 说明 |
+| --- | --- |
+| `/` | 公开信息流（筛选、分页） |
+| `/detail/:id` | 详情、认领、作者审核 |
+| `/login` | 手机号验证码登录 |
+| `/publish` | 发布（登录后） |
+| `/search` | AI 搜寻（登录后） |
+| `/mine` | 我的帖子 / 认领 |
+
+发布前请在 Django Admin 准备好 `Region` / `Place`。图片直传腾讯云 COS；本地未配置 COS 时可先不传图。AI 搜寻需要后端已运行 `process_embeddings`。

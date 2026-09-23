@@ -7,3 +7,4 @@ alibabacloud_dypnsapi20170525==2.0.0
 alibabacloud_dysmsapi20170525==4.6.0
 django-redis==5.4.0
 gunicorn==26.1.0
+dashscope==1.24.6

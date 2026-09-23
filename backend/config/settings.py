@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.accounts.apps.AccountsConfig",
     "apps.storage.apps.StorageConfig",
     "apps.claims.apps.ClaimsConfig",
+    "apps.ai.apps.AiConfig",
 ]
 
 MIDDLEWARE = [
@@ -107,6 +108,7 @@ REST_FRAMEWORK = {
         "send_code_ip": "30/min",   # send-code：同一 IP 每分钟最多 30 次，防刷多手机号
         "login_ip":     "10/min",   # login-code：同一 IP 每分钟最多 10 次，防验证码爆破
         "presign_user": "30/min",   # presign：同一登录用户每分钟最多 30 张上传凭证
+        "match_search_user": "20/min",  # matches/search：同一登录用户每分钟最多 20 次
     },
 }
 
@@ -147,3 +149,11 @@ CORS_ALLOWED_ORIGINS = [
     for o in os.environ.get("CORS_ALLOWED_ORIGINS", "").split(",")
     if o.strip()
 ]
+
+# AI 匹配：默认百炼；测试/无 Key 联调用 fake。AI_EMBED_INLINE=true 时在请求内同步向量化。
+AI_EMBEDDING_PROVIDER = os.environ.get("AI_EMBEDDING_PROVIDER", "dashscope")
+AI_EMBED_INLINE = os.environ.get("AI_EMBED_INLINE", "false").lower() in {
+    "1",
+    "true",
+    "yes",
+}
